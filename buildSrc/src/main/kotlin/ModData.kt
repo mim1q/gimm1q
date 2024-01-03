@@ -1,0 +1,8 @@
+object ModData {
+  const val GROUP = "dev.mim1q"
+  const val ID = "mim1qscommons"
+  const val VERSION = "0.1.0-SNAPSHOT"
+  const val VERSION_TYPE = "beta"
+  val mcVersions = listOf("1.20.1")
+  val dependencies = listOf("fabric-api", /*"owo-lib"*/)
+}

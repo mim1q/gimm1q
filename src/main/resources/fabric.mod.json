@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "mim1qscommons",
+  "version": "${version}",
+  "name": "mim1qscommons",
+  "description": "",
+  "authors": [],
+  "contact": {
+    "repo": "https://github.com/mimiq/mim1qscommons"
+  },
+  "license": "MIT",
+  "icon": "assets/mim1qscommons/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "dev.mim1q.mim1qscommons.client.Mim1qsCommonsClient"
+    ],
+    "main": [
+      "dev.mim1q.mim1qscommons.Mim1qsCommons"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

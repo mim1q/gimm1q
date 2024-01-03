@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "testmod",
+  "version": "0.0.1",
+  "name": "testmod",
+  "description": "",
+  "authors": [],
+  "license": "MIT",
+  "icon": "assets/testmod/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "dev.mim1q.testmod.TestMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "fabric": "*",
+    "minecraft": "*"
+  }
+}
