@@ -1,0 +1,11 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "dev.mim1q.gimm1q.mixin",
+  "mixins": [
+
+  ],
+  "client": [
+    "client.ClientPlayerCameraShakeMixin"
+  ]
+}

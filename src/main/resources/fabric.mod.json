@@ -1,24 +1,27 @@
 {
   "schemaVersion": 1,
-  "id": "mim1qscommons",
+  "id": "gimm1q",
   "version": "${version}",
-  "name": "mim1qscommons",
+  "name": "gimm1q",
   "description": "",
   "authors": [],
   "contact": {
-    "repo": "https://github.com/mimiq/mim1qscommons"
+    "repo": "https://github.com/mimiq/gimm1q"
   },
   "license": "MIT",
-  "icon": "assets/mim1qscommons/icon.png",
+  "icon": "assets/gimm1q/icon.png",
   "environment": "*",
   "entrypoints": {
     "client": [
-      "dev.mim1q.mim1qscommons.client.Mim1qsCommonsClient"
+      "dev.mim1q.gimm1q.client.Gimm1qClient"
     ],
     "main": [
-      "dev.mim1q.mim1qscommons.Mim1qsCommons"
+      "dev.mim1q.gimm1q.Gimm1q"
     ]
   },
+  "mixins": [
+    "gimm1q.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric": "*",

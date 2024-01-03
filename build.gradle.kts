@@ -9,16 +9,16 @@ repositories {
 }
 
 dependencies {
-    // To change the versions see the gradle.properties file
     minecraft("com.mojang:minecraft:${Versions.MINECRAFT}")
     mappings("net.fabricmc:yarn:${Versions.YARN}:v2")
     modImplementation("net.fabricmc:fabric-loader:${Versions.FABRIC_LOADER}")
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
     modImplementation("net.fabricmc.fabric-api:fabric-api:${Versions.FABRIC_API}")
 
-    testImplementation(sourceSets.main.get().output)
-    testImplementation(sourceSets.main.get().output)
+    afterEvaluate {
+        "testmodImplementation"(sourceSets.main.get().output)
+        "testmodImplementation"(sourceSets.main.get().output)
+    }
 }
 
 tasks {
@@ -54,8 +54,6 @@ sourceSets {
 }
 
 loom {
-
-    // Kotlin DSL
     runs {
         create("testmodClient") {
             client()
