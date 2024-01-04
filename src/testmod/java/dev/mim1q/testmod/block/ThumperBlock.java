@@ -1,6 +1,6 @@
 package dev.mim1q.testmod.block;
 
-import dev.mim1q.gimm1q.util.ScreenShakeUtils;
+import dev.mim1q.gimm1q.screenshake.ScreenShakeUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
@@ -25,7 +25,15 @@ public class ThumperBlock extends Block {
     @Override
     @SuppressWarnings("deprecation")
     public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
-        ScreenShakeUtils.shakeAround(world, Vec3d.ofBottomCenter(pos), 0.3f, 20, 2, 5);
+        ScreenShakeUtils.shakeAround(
+            world,
+            Vec3d.ofBottomCenter(pos),
+            2f,
+            20,
+            2,
+            5,
+            "testmod"
+        );
         world.scheduleBlockTick(pos, this, 20);
     }
 }

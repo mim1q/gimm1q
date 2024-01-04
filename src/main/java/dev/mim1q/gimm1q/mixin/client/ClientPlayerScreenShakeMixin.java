@@ -1,6 +1,6 @@
 package dev.mim1q.gimm1q.mixin.client;
 
-import dev.mim1q.gimm1q.interfaces.ScreenShakeAccessor;
+import dev.mim1q.gimm1q.screenshake.ScreenShakeAccessor;
 import dev.mim1q.gimm1q.interpolation.AnimatedProperty;
 import dev.mim1q.gimm1q.interpolation.Easing;
 import net.minecraft.client.network.ClientPlayerEntity;

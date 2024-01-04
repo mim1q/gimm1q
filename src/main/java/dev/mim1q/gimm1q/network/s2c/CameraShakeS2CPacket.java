@@ -7,10 +7,11 @@ import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public class CameraShakeS2CPacket extends PacketByteBuf {
-    public CameraShakeS2CPacket(float intensity, int duration) {
+    public CameraShakeS2CPacket(float intensity, int duration, String modifierName) {
         super(Unpooled.buffer());
         writeFloat(intensity);
         writeInt(duration);
+        writeString(modifierName);
     }
 
     public void send(ServerPlayerEntity player) {
