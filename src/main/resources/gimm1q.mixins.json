@@ -6,6 +6,6 @@
 
   ],
   "client": [
-    "client.ClientPlayerCameraShakeMixin"
+    "client.ClientPlayerScreenShakeMixin"
   ]
 }

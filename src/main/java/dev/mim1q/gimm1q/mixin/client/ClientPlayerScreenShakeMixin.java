@@ -1,6 +1,6 @@
 package dev.mim1q.gimm1q.mixin.client;
 
-import dev.mim1q.gimm1q.interfaces.ShakeableCameraAccessor;
+import dev.mim1q.gimm1q.interfaces.ScreenShakeAccessor;
 import dev.mim1q.gimm1q.interpolation.AnimatedProperty;
 import dev.mim1q.gimm1q.interpolation.Easing;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -21,9 +21,9 @@ import static net.minecraft.util.math.MathHelper.lerp;
 import static net.minecraft.util.math.MathHelper.sign;
 
 @Mixin(ClientPlayerEntity.class)
-public abstract class ClientPlayerCameraShakeMixin
+public abstract class ClientPlayerScreenShakeMixin
     extends LivingEntity
-    implements ShakeableCameraAccessor {
+    implements ScreenShakeAccessor {
 
 
     @Unique private AnimatedProperty cameraShakeIntensity = new AnimatedProperty(0.0F);
@@ -34,7 +34,7 @@ public abstract class ClientPlayerCameraShakeMixin
     @Unique private float lastCameraShakeYaw = 0.0f;
     @Unique private float cameraShakeYaw = 0.0f;
 
-    protected ClientPlayerCameraShakeMixin(EntityType<? extends LivingEntity> entityType, World world) {
+    protected ClientPlayerScreenShakeMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
     }
 
