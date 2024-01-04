@@ -28,8 +28,8 @@ public class ThumperBlock extends Block {
     @SuppressWarnings("deprecation")
     public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
         world.getPlayers(player -> player.squaredDistanceTo(Vec3d.ofBottomCenter(pos)) <= 36)
-             .forEach(player -> PlayerCameraShake.applyShake(player, 0.5f, 10));
+             .forEach(player -> PlayerCameraShake.applyShake(player, 2f, 60));
         world.playSound(null, pos, SoundEvents.BLOCK_STONE_BREAK, SoundCategory.BLOCKS);
-        world.scheduleBlockTick(pos, this, 40);
+        world.scheduleBlockTick(pos, this, 100);
     }
 }
