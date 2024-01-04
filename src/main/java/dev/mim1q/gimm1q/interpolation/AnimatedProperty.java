@@ -19,7 +19,7 @@ public class AnimatedProperty {
     }
 
     public AnimatedProperty(float value) {
-        this(value, Interpolation::easeInOutQuad);
+        this(value, Easing::easeInOutQuad);
     }
 
     public void transitionTo(float targetValue, float duration, EasingFunction easingFunction) {

@@ -1,7 +1,7 @@
 package dev.mim1q.gimm1q.interpolation;
 
 // https://easings.net has been a great help in creating these functions :)
-public class Interpolation {
+public class Easing {
     public static float lerp(float start, float end, float delta) {
         return start + delta * (end - start);
     }

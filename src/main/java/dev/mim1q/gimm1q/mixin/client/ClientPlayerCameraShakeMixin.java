@@ -2,7 +2,7 @@ package dev.mim1q.gimm1q.mixin.client;
 
 import dev.mim1q.gimm1q.interfaces.ShakeableCameraAccessor;
 import dev.mim1q.gimm1q.interpolation.AnimatedProperty;
-import dev.mim1q.gimm1q.interpolation.Interpolation;
+import dev.mim1q.gimm1q.interpolation.Easing;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -42,7 +42,7 @@ public abstract class ClientPlayerCameraShakeMixin
     public void shakeCamera(float intensity, int duration) {
         this.cameraShakeTicks = 0;
         this.cameraShakeDuration = duration;
-        this.cameraShakeIntensity.transitionTo(intensity, min(5, duration), Interpolation::easeInOutCubic);
+        this.cameraShakeIntensity.transitionTo(intensity, min(5, duration), Easing::easeInOutCubic);
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
@@ -52,18 +52,18 @@ public abstract class ClientPlayerCameraShakeMixin
                 this.cameraShakeIntensity.transitionTo(
                     0.0f,
                     max(5, cameraShakeDuration - 5),
-                    Interpolation::easeOutCubic
+                    Easing::easeOutCubic
                 );
             }
             this.cameraShakeTicks++;
         } else {
-            this.cameraShakeIntensity.transitionTo(0.0f, 5, Interpolation::easeOutCubic);
+            this.cameraShakeIntensity.transitionTo(0.0f, 5, Easing::easeOutCubic);
         }
 
         var intensity = this.cameraShakeIntensity.update(this.age);
 
         this.lastCameraShakePitch = this.cameraShakePitch;
-        this.cameraShakePitch = getNewRotation(this.random, 0) * intensity;
+        this.cameraShakePitch = getNewRotation(this.random, 0) * intensity * 0.5f;
         this.lastCameraShakeYaw = this.cameraShakeYaw;
         this.cameraShakeYaw = getNewRotation(this.random, -sign(lastCameraShakeYaw)) * intensity;
     }
@@ -96,6 +96,6 @@ public abstract class ClientPlayerCameraShakeMixin
 
     @Unique
     private static float easeShake(float start, float end, float delta) {
-        return Interpolation.easeInOutCubic(start, end, delta);
+        return Easing.easeInOutCubic(start, end, delta);
     }
 }
