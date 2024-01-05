@@ -27,6 +27,7 @@ public abstract class ClientPlayerScreenShakeMixin
 
 
     @Unique private AnimatedProperty cameraShakeIntensity = new AnimatedProperty(0.0F);
+    @Unique private float lastIntensity = 0.0f;
     @Unique private int cameraShakeTicks = 0;
     @Unique private int cameraShakeDuration = 0;
     @Unique private float lastCameraShakePitch = 0.0f;
@@ -40,9 +41,12 @@ public abstract class ClientPlayerScreenShakeMixin
 
     @Override
     public void shakeCamera(float intensity, int duration) {
-        this.cameraShakeTicks = 0;
-        this.cameraShakeDuration = duration;
-        this.cameraShakeIntensity.transitionTo(intensity, min(5, duration), Easing::easeInOutCubic);
+        if (cameraShakeTicks >= cameraShakeDuration || intensity > lastIntensity) {
+            this.lastIntensity = intensity;
+            this.cameraShakeTicks = 0;
+            this.cameraShakeDuration = duration;
+            this.cameraShakeIntensity.transitionTo(intensity, min(5, duration), Easing::easeInOutCubic);
+        }
     }
 
     @Inject(method = "tick", at = @At("HEAD"))
