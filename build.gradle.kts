@@ -1,5 +1,6 @@
 plugins {
     id("fabric-loom") version Versions.LOOM
+    id("maven-publish")
 }
 
 version = ModData.VERSION
@@ -66,6 +67,17 @@ loom {
             ideConfigGenerated(project.rootProject == project)
             name("Testmod Server")
             source(sourceSets.getByName("testmod"))
+        }
+    }
+}
+
+publishing {
+    publications {
+        register<MavenPublication>("mavenJava") {
+            from(components["java"])
+            groupId = ModData.GROUP
+            artifactId = ModData.ID
+            version = ModData.VERSION
         }
     }
 }
