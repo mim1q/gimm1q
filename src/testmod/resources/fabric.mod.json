@@ -11,6 +11,9 @@
   "entrypoints": {
     "main": [
       "dev.mim1q.testmod.TestMod"
+    ],
+    "client": [
+      "dev.mim1q.testmod.TestModClient"
     ]
   },
   "depends": {

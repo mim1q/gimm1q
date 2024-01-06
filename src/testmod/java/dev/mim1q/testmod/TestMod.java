@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -23,7 +24,8 @@ public class TestMod implements ModInitializer {
     public static final String ID = "testmod";
     public static final Logger LOGGER = LogManager.getLogger(ID);
 
-    private static final ThumperBlock THUMPER_BLOCK = registerBlock("thumper", new ThumperBlock(FabricBlockSettings.copyOf(Blocks.STONE)));
+    public static final ThumperBlock THUMPER_BLOCK = registerBlock("thumper", new ThumperBlock(FabricBlockSettings.copyOf(Blocks.STONE)));
+    public static final Item HIGHLIGHT_STICK = registerItem("highlight_stick", new Item(new FabricItemSettings()));
 
     @Override
     public void onInitialize() {
@@ -50,5 +52,9 @@ public class TestMod implements ModInitializer {
         var registeredBlock = Registry.register(Registries.BLOCK, id(name), block);
         Registry.register(Registries.ITEM, id(name), new BlockItem(registeredBlock, new FabricItemSettings()));
         return registeredBlock;
+    }
+
+    private static <I extends Item> I registerItem(String name, I item) {
+        return Registry.register(Registries.ITEM, id(name), item);
     }
 }

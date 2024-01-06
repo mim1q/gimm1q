@@ -41,7 +41,7 @@ public abstract class ClientPlayerScreenShakeMixin
 
     @Override
     public void shakeCamera(float intensity, int duration) {
-        if (cameraShakeTicks >= cameraShakeDuration || intensity > lastIntensity) {
+        if (cameraShakeTicks >= cameraShakeDuration || intensity >= lastIntensity) {
             this.lastIntensity = intensity;
             this.cameraShakeTicks = 0;
             this.cameraShakeDuration = duration;
