@@ -5,11 +5,14 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Box;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
+
+import static net.minecraft.util.math.MathHelper.sign;
 
 public final class HighlightDrawerImpl implements HighlightDrawer {
     public static final HighlightDrawerImpl INSTANCE = new HighlightDrawerImpl();
@@ -24,43 +27,40 @@ public final class HighlightDrawerImpl implements HighlightDrawer {
     }
 
     @Override
-    public void drawHighlight(Vec3d from, Vec3d to, int color) {
+    public void drawHighlight(Box box, int colorArgb, int outlineArgb) {
         if (renderContext == null) return;
 
         var matrices = renderContext.matrixStack();
         var vertexConsumers = renderContext.consumers();
         if (matrices == null || vertexConsumers == null) return;
 
-        var buffer = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(TEXTURE));
         var vertices = new float[][] {
-            new float[] { (float) from.x, (float) from.y, (float) from.z }, // 000
-            new float[] { (float) from.x, (float) from.y, (float) to.z }, // 001
-            new float[] { (float) from.x, (float) to.y, (float) from.z }, // 010
-            new float[] { (float) from.x, (float) to.y, (float) to.z },   // 011
-            new float[] { (float) to.x, (float) from.y, (float) from.z }, // 100
-            new float[] { (float) to.x, (float) from.y, (float) to.z },   // 101
-            new float[] { (float) to.x, (float) to.y, (float) from.z },   // 110
-            new float[] { (float) to.x, (float) to.y, (float) to.z },     // 111
+            new float[] { (float) box.minX, (float) box.minY, (float) box.minZ }, // 000 [0]
+            new float[] { (float) box.minX, (float) box.minY, (float) box.maxZ }, // 001 [1]
+            new float[] { (float) box.minX, (float) box.maxY, (float) box.minZ }, // 010 [2]
+            new float[] { (float) box.minX, (float) box.maxY, (float) box.maxZ }, // 011 [3]
+            new float[] { (float) box.maxX, (float) box.minY, (float) box.minZ }, // 100 [4]
+            new float[] { (float) box.maxX, (float) box.minY, (float) box.maxZ }, // 101 [5]
+            new float[] { (float) box.maxX, (float) box.maxY, (float) box.minZ }, // 110 [6]
+            new float[] { (float) box.maxX, (float) box.maxY, (float) box.maxZ }, // 111 [7]
         };
 
         matrices.push();
         {
             matrices.translate(-renderContext.camera().getPos().x, -renderContext.camera().getPos().y, -renderContext.camera().getPos().z);
-            drawFace(matrices, buffer, new float[][] { vertices[3], vertices[2], vertices[0], vertices[1] }, color);
-            drawFace(matrices, buffer, new float[][] { vertices[6], vertices[7], vertices[5], vertices[4] }, color);
-            drawFace(matrices, buffer, new float[][] { vertices[2], vertices[6], vertices[4], vertices[0] }, color);
-            drawFace(matrices, buffer, new float[][] { vertices[7], vertices[3], vertices[1], vertices[5] }, color);
-            drawFace(matrices, buffer, new float[][] { vertices[4], vertices[5], vertices[1], vertices[0] }, color);
-            drawFace(matrices, buffer, new float[][] { vertices[3], vertices[7], vertices[6], vertices[2] }, color);
+            drawFace(matrices, vertexConsumers, new float[][] { vertices[3], vertices[2], vertices[0], vertices[1] }, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][] { vertices[6], vertices[7], vertices[5], vertices[4] }, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][] { vertices[2], vertices[6], vertices[4], vertices[0] }, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][] { vertices[7], vertices[3], vertices[1], vertices[5] }, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][] { vertices[4], vertices[5], vertices[1], vertices[0] }, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][] { vertices[3], vertices[7], vertices[6], vertices[2] }, colorArgb, outlineArgb);
         }
         matrices.pop();
     }
 
-    private void drawVertex(Matrix4f posMatrix, Matrix3f normalMatrix, VertexConsumer buffer, float[][] vertices, int argb, int index) {
-        var u = index & 1;
-        var v = (index >> 1) & 1;
+    private void drawVertex(Matrix4f posMatrix, Matrix3f normalMatrix, VertexConsumer buffer, float[] vertex, int argb, float u, float v) {
         buffer
-            .vertex(posMatrix, vertices[index][0], vertices[index][1], vertices[index][2])
+            .vertex(posMatrix, vertex[0], vertex[1], vertex[2])
             .color(argb)
             .texture(u, v)
             .overlay(OverlayTexture.DEFAULT_UV)
@@ -69,12 +69,63 @@ public final class HighlightDrawerImpl implements HighlightDrawer {
             .next();
     }
 
-    private void drawFace(MatrixStack matrices, VertexConsumer buffer, float[][] vertices, int argb) {
+    private void drawFace(MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, float[][] vertices, int argb, int outlineArgb) {
         var posMatrix = matrices.peek().getPositionMatrix();
         var normalMatrix = matrices.peek().getNormalMatrix();
+        var buffer = vertexConsumerProvider.getBuffer(RenderLayer.getEntityTranslucent(TEXTURE));
 
-        for (int i = 0 ; i <= 3; ++i) {
-            drawVertex(posMatrix, normalMatrix, buffer, vertices, argb, i);
+        var drawOutline = (outlineArgb & 0xFF000000) != 0;
+        var innerVertices = vertices;
+
+        if (drawOutline) {
+            innerVertices = getInsetFace(vertices, 1/16f);
+            var outlineBuffer = vertexConsumerProvider.getBuffer(RenderLayer.getEntityTranslucent(TEXTURE));
+            drawInsetFace(posMatrix, normalMatrix, outlineBuffer, vertices, innerVertices, outlineArgb);
         }
+
+        for (var i = 0 ; i <= 3; ++i) {
+            var u = i & 1;
+            var v = (i >> 1) & 1;
+            drawVertex(posMatrix, normalMatrix, buffer, innerVertices[i], argb, u, v);
+        }
+    }
+
+    private void drawInsetFace(Matrix4f posMatrix, Matrix3f normalMatrix, VertexConsumer buffer, float[][] vertices, float[][] insetVertices, int argb) {
+        for (var i = 0 ; i <= 3; ++i) {
+            drawVertex(posMatrix, normalMatrix, buffer, vertices[i], argb, 0, 0);
+            drawVertex(posMatrix, normalMatrix, buffer, insetVertices[i], argb, 1, 0);
+            drawVertex(posMatrix, normalMatrix, buffer, insetVertices[(i + 1) % 4], argb, 1, 1);
+            drawVertex(posMatrix, normalMatrix, buffer, vertices[(i + 1) % 4], argb, 0, 1);
+        }
+    }
+
+    private float[][] getInsetFace(float[][] vertices, float inset) {
+        float dx = sign(vertices[2][0] - vertices[0][0]);
+        float dy = sign(vertices[2][1] - vertices[0][1]);
+        float dz = sign(vertices[2][2] - vertices[0][2]);
+
+        if (dy == 0) {
+            if (dz > 0) {
+                return new float[][] {
+                    new float[] { vertices[0][0] + dx * inset, vertices[0][1], vertices[0][2] + dz * inset },
+                    new float[] { vertices[1][0] + dx * inset, vertices[1][1], vertices[1][2] - dz * inset },
+                    new float[] { vertices[2][0] - dx * inset, vertices[2][1], vertices[2][2] - dz * inset },
+                    new float[] { vertices[3][0] - dx * inset, vertices[3][1], vertices[3][2] + dz * inset },
+                };
+            }
+            return new float[][] {
+                new float[] { vertices[0][0] + dx * inset, vertices[0][1], vertices[0][2] + dz * inset },
+                new float[] { vertices[1][0] - dx * inset, vertices[1][1], vertices[1][2] + dz * inset },
+                new float[] { vertices[2][0] - dx * inset, vertices[2][1], vertices[2][2] - dz * inset },
+                new float[] { vertices[3][0] + dx * inset, vertices[3][1], vertices[3][2] - dz * inset },
+            };
+        }
+
+        return new float[][] {
+          new float[] { vertices[0][0] + dx * inset, vertices[0][1] + dy * inset, vertices[0][2] + dz * inset },
+          new float[] { vertices[1][0] - dx * inset, vertices[1][1] + dy * inset, vertices[1][2] - dz * inset },
+          new float[] { vertices[2][0] - dx * inset, vertices[2][1] - dy * inset, vertices[2][2] - dz * inset },
+          new float[] { vertices[3][0] + dx * inset, vertices[3][1] - dy * inset, vertices[3][2] + dz * inset },
+        };
     }
 }

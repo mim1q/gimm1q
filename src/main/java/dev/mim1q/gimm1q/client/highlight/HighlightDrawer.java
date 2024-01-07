@@ -1,24 +1,42 @@
 package dev.mim1q.gimm1q.client.highlight;
 
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Box;
 
 public interface HighlightDrawer {
-    void drawHighlight(Vec3d from, Vec3d to, int color);
-    default void highlightBlock(BlockPos pos, int color) {
+    void drawHighlight(Box box, int colorArgb, int outlineArgb);
+
+    default void drawHighlight(Box box, int colorArgb) {
+        drawHighlight(box, colorArgb, 0);
+    }
+
+    default void highlightBlock(BlockPos pos, int colorArgb, int outlineArgb) {
         drawHighlight(
-            Vec3d.of(pos).subtract(0.001, 0.001, 0.001),
-            Vec3d.of(pos).add(1.001, 1.001, 1.001),
-            color
+            new Box(pos).expand(0.05),
+            colorArgb,
+            outlineArgb
         );
     }
-    default void highlightEntity(Entity entity, int color) {
-        var box = entity.getBoundingBox().expand(0.1);
+
+    default void highlightBlock(BlockPos pos, int colorArgb) {
+        highlightBlock(pos, colorArgb, 0);
+    }
+
+    default void highlightEntity(Entity entity, int colorArgb, int outlineArgb) {
+        var tickDelta = MinecraftClient.getInstance().getTickDelta();
+        var pos = entity.getLerpedPos(tickDelta);
+        var dxz = (entity.getWidth() / 2) + 0.05;
+        var dy = entity.getHeight() + 0.05;
         drawHighlight(
-            new Vec3d(box.minX, box.minY, box.minZ),
-            new Vec3d(box.maxX, box.maxY, box.maxZ),
-            color
+            new Box(pos.x - dxz, pos.y - 0.05, pos.z - dxz, pos.x + dxz, pos.y + dy, pos.z + dxz),
+            colorArgb,
+            outlineArgb
         );
+    }
+
+    default void highlightEntity(Entity entity, int colorArgb) {
+        highlightEntity(entity, colorArgb, 0);
     }
 }
