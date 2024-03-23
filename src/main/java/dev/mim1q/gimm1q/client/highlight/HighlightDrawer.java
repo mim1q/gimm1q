@@ -14,7 +14,7 @@ public interface HighlightDrawer {
 
     default void highlightBlock(BlockPos pos, int colorArgb, int outlineArgb) {
         drawHighlight(
-            new Box(pos).expand(0.05),
+            new Box(pos).expand(0.001),
             colorArgb,
             outlineArgb
         );
