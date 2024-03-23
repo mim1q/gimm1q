@@ -1,6 +1,7 @@
 package dev.mim1q.testmod;
 
 import dev.mim1q.gimm1q.client.highlight.HighlightDrawerCallback;
+import dev.mim1q.gimm1q.client.item.handheld.HandheldItemModelRegistry;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
@@ -18,5 +19,8 @@ public class TestModClient implements ClientModInitializer {
                 }
             }
         });
+
+//        ModelPredicateProviderRegistry.
+        HandheldItemModelRegistry.getInstance().register(HIGHLIGHT_STICK);
     }
 }

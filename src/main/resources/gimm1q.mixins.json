@@ -3,9 +3,9 @@
   "minVersion": "0.8",
   "package": "dev.mim1q.gimm1q.mixin",
   "mixins": [
-
   ],
   "client": [
-    "client.ClientPlayerScreenShakeMixin"
+    "client.ClientPlayerScreenShakeMixin",
+    "client.item.ItemRendererMixin"
   ]
 }
