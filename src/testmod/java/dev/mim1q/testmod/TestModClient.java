@@ -20,7 +20,6 @@ public class TestModClient implements ClientModInitializer {
             }
         });
 
-//        ModelPredicateProviderRegistry.
         HandheldItemModelRegistry.getInstance().register(HIGHLIGHT_STICK);
     }
 }

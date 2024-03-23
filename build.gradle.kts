@@ -59,7 +59,7 @@ tasks {
 
         commandLine(
             "gh", "release",
-            "create", jarName, "build/libs/${jarName}.jar" ,
+            "create", ModData.VERSION, "build/libs/${jarName}.jar" ,
             "-t", "Gimm1q ${ModData.VERSION_TYPE} ${ModData.VERSION} (${Versions.MINECRAFT})",
             "-n", changelog,
         )
