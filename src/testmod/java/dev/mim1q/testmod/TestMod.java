@@ -2,6 +2,8 @@ package dev.mim1q.testmod;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeModifiers;
+import dev.mim1q.testmod.block.EasingTesterBlock;
+import dev.mim1q.testmod.block.EasingTesterBlockEntity;
 import dev.mim1q.testmod.block.ThumperBlock;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -9,6 +11,7 @@ import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
@@ -26,6 +29,12 @@ public class TestMod implements ModInitializer {
 
     public static final ThumperBlock THUMPER_BLOCK = registerBlock("thumper", new ThumperBlock(FabricBlockSettings.copyOf(Blocks.STONE)));
     public static final Item HIGHLIGHT_STICK = registerItem("highlight_stick", new Item(new FabricItemSettings()));
+    public static final Block EASING_TESTER = registerBlock("easing_tester", new EasingTesterBlock(FabricBlockSettings.copyOf(Blocks.STONE)));
+    public static final BlockEntityType<EasingTesterBlockEntity> EASING_TESTER_BE = Registry.register(
+        Registries.BLOCK_ENTITY_TYPE,
+        id("easing_tester"),
+        BlockEntityType.Builder.create(EasingTesterBlockEntity::new, EASING_TESTER).build(null)
+    );
 
     @Override
     public void onInitialize() {

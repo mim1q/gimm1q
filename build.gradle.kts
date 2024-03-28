@@ -1,6 +1,7 @@
 plugins {
     id("fabric-loom") version Versions.LOOM
     id("maven-publish")
+    id("io.github.p03w.machete") version "2.0.1"
 }
 
 version = ModData.VERSION

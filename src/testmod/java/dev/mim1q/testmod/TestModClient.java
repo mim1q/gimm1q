@@ -2,7 +2,9 @@ package dev.mim1q.testmod;
 
 import dev.mim1q.gimm1q.client.highlight.HighlightDrawerCallback;
 import dev.mim1q.gimm1q.client.item.handheld.HandheldItemModelRegistry;
+import dev.mim1q.testmod.render.EasingTesterRenderer;
 import net.fabricmc.api.ClientModInitializer;
+import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 
@@ -21,5 +23,8 @@ public class TestModClient implements ClientModInitializer {
         });
 
         HandheldItemModelRegistry.getInstance().register(HIGHLIGHT_STICK);
+
+        // Register the EasingTesterRenderer
+        BlockEntityRendererFactories.register(TestMod.EASING_TESTER_BE, EasingTesterRenderer::new);
     }
 }
