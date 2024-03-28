@@ -27,6 +27,11 @@ tasks {
     withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
     }
+    // Jitpack publishing fix
+    withType<GenerateModuleMetadata> {
+        dependsOn("optimizeOutputsOfRefmapJar")
+    }
+
     jar {
         from("LICENSE") {
             rename { "${it}_${ModData.GROUP}"}
