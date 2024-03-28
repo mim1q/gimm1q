@@ -24,7 +24,7 @@ public class EasingTesterBlockEntity extends BlockEntity {
         var time = blockEntity.getWorld().getTime();
 
         if (time % 60 == 20) {
-            blockEntity.animatedProperty.transitionTo(1.0F, 20.0F, blockEntity.getEasingFunction());
+            blockEntity.animatedProperty.transitionTo(1.0F, 10.0F, blockEntity.getEasingFunction());
         } else if (time % 60 == 50) {
             blockEntity.animatedProperty.transitionTo(0.0F, 20.0F, blockEntity.getEasingFunction());
         }
