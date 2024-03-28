@@ -29,7 +29,7 @@ tasks {
     }
     // Jitpack publishing fix
     withType<GenerateModuleMetadata> {
-        dependsOn("optimizeOutputsOfRefmapJar")
+        dependsOn("optimizeOutputsOfRemapJar")
     }
 
     jar {
