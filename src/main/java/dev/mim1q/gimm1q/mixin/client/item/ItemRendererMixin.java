@@ -19,7 +19,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ItemRenderer.class)
 public abstract class ItemRendererMixin {
-    @Shadow public abstract ItemModels getModels();
+    @Shadow
+    public abstract ItemModels getModels();
 
     @Inject(
         method = "getModel(Lnet/minecraft/item/ItemStack;Lnet/minecraft/world/World;Lnet/minecraft/entity/LivingEntity;I)Lnet/minecraft/client/render/model/BakedModel;",
@@ -29,7 +30,7 @@ public abstract class ItemRendererMixin {
     private void gimm1q$getModel(ItemStack stack, World world, LivingEntity entity, int seed, CallbackInfoReturnable<BakedModel> cir) {
         var model = HandheldItemModelRegistryImpl.MODELS.get(stack.getItem());
         if (model != null) {
-            cir.setReturnValue((getModels().getModelManager().getModel(model.getRight())));
+            cir.setReturnValue((getModels().getModelManager().getModel(model.getLeft())));
         }
     }
 
@@ -40,11 +41,22 @@ public abstract class ItemRendererMixin {
         argsOnly = true
     )
     private BakedModel gimm1q$renderItemModifyModel(
-        BakedModel originalModel, ItemStack stack, ModelTransformationMode mode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay
+        BakedModel originalModel,
+        ItemStack stack,
+        ModelTransformationMode mode,
+        boolean leftHanded,
+        MatrixStack matrices,
+        VertexConsumerProvider vertexConsumers,
+        int light,
+        int overlay
     ) {
-        if (mode == ModelTransformationMode.GUI || mode == ModelTransformationMode.GROUND || mode == ModelTransformationMode.FIXED) {
+        if (mode == ModelTransformationMode.FIRST_PERSON_RIGHT_HAND
+            || mode == ModelTransformationMode.FIRST_PERSON_LEFT_HAND
+            || mode == ModelTransformationMode.THIRD_PERSON_RIGHT_HAND
+            || mode == ModelTransformationMode.THIRD_PERSON_LEFT_HAND
+        ) {
             var model = HandheldItemModelRegistryImpl.MODELS.get(stack.getItem());
-            if (model != null) return getModels().getModelManager().getModel(model.getLeft());
+            if (model != null) return getModels().getModelManager().getModel(model.getRight());
         }
         return originalModel;
     }
