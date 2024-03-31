@@ -83,6 +83,9 @@ public final class HighlightDrawerImpl implements HighlightDrawer {
             drawInsetFace(posMatrix, normalMatrix, outlineBuffer, vertices, innerVertices, outlineArgb);
         }
 
+        var drawInner = (argb & 0xFF000000) != 0;
+        if (!drawInner) return;
+
         for (var i = 0 ; i <= 3; ++i) {
             var u = i & 1;
             var v = (i >> 1) & 1;

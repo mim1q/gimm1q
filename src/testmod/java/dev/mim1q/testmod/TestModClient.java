@@ -17,7 +17,7 @@ public class TestModClient implements ClientModInitializer {
             var player = context.player();
             if (player.getStackInHand(Hand.MAIN_HAND).isOf(HIGHLIGHT_STICK)) {
                 for (var entity : player.clientWorld.getOtherEntities(player, Box.of(player.getPos(), 32, 32, 32))) {
-                    drawer.highlightEntity(entity, 0x20FFFFFF, 0xFF000000);
+                    drawer.highlightEntity(entity, 0x00000000, 0xFF000000);
                 }
             }
         });
