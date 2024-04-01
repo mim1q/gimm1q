@@ -5,11 +5,13 @@ import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class HandheldItemModelRegistryImpl implements HandheldItemModelRegistry {
+@ApiStatus.Internal
+public final class HandheldItemModelRegistryImpl implements HandheldItemModelRegistry {
     public static final HandheldItemModelRegistry INSTANCE = new HandheldItemModelRegistryImpl();
     public static final Map<Item, Pair<ModelIdentifier, ModelIdentifier>> MODELS = new HashMap<>();
 

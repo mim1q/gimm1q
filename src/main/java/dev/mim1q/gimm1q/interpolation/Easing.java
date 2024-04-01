@@ -4,7 +4,13 @@ import net.minecraft.util.math.MathHelper;
 
 import static net.minecraft.util.math.MathHelper.clamp;
 
-// https://easings.net has been a great help in creating these functions :)
+/**
+ * Functions for interpolating between two {@code float} values using different easing algorithms.
+ * <a href="https://easings.net/">Easings.net</a> has been a great resource for understanding and visualizing these
+ * easing functions.
+ *
+ * @see AnimatedProperty
+ */
 public class Easing {
     //#region Linear Interpolation
     public static float lerp(float start, float end, float delta) {
@@ -18,7 +24,7 @@ public class Easing {
     public static float clampDelta(float delta) {
         return clamp(delta, 0, 1);
     }
-    
+
     //#endregion
 
     //#region Easing Functions
@@ -99,7 +105,7 @@ public class Easing {
     }
 
     private static float easeInOutCubicDelta(float x) {
-        if (x < 0.5f)  return 4 * x * x * x;
+        if (x < 0.5f) return 4 * x * x * x;
         return 1 - (-2 * x + 2) * (-2 * x + 2) * (-2 * x + 2) / 2;
     }
 
@@ -113,7 +119,7 @@ public class Easing {
         final var c1 = 1.70158f;
         return 1 + (c1 + 1) * (x - 1) * (x - 1) * (x - 1) + c1 * (x - 1) * (x - 1);
     }
-    
+
     private static float easeInOutBackDelta(float x) {
         final var c2 = 1.70158f * 1.525f;
         if (x < 0.5f) return 2 * x * (2 * x) * ((c2 + 1) * 2 * x - c2) / 2;

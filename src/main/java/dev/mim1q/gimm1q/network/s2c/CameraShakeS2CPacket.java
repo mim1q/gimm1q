@@ -5,7 +5,9 @@ import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.ApiStatus;
 
+@ApiStatus.Internal
 public class CameraShakeS2CPacket extends PacketByteBuf {
     public CameraShakeS2CPacket(float intensity, int duration, String modifierName) {
         super(Unpooled.buffer());

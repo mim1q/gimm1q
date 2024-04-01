@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.ApiStatus;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -20,13 +21,10 @@ import static java.lang.Math.min;
 import static net.minecraft.util.math.MathHelper.lerp;
 import static net.minecraft.util.math.MathHelper.sign;
 
+@ApiStatus.Internal
 @Mixin(ClientPlayerEntity.class)
-public abstract class ClientPlayerScreenShakeMixin
-    extends LivingEntity
-    implements ScreenShakeAccessor {
-
-
-    @Unique private AnimatedProperty cameraShakeIntensity = new AnimatedProperty(0.0F);
+public abstract class ClientPlayerScreenShakeMixin extends LivingEntity implements ScreenShakeAccessor {
+    @Unique private final AnimatedProperty cameraShakeIntensity = new AnimatedProperty(0.0F);
     @Unique private float lastIntensity = 0.0f;
     @Unique private int cameraShakeTicks = 0;
     @Unique private int cameraShakeDuration = 0;

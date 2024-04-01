@@ -4,7 +4,9 @@ import net.fabricmc.api.ModInitializer;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 
+@ApiStatus.Internal
 public class Gimm1q implements ModInitializer {
     public static final String ID = "gimm1q";
     public static final Logger LOGGER = LogManager.getLogger(ID);

@@ -9,12 +9,14 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
+import org.jetbrains.annotations.ApiStatus;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 
 import static net.minecraft.util.math.MathHelper.sign;
 
-public final class HighlightDrawerImpl implements HighlightDrawer {
+@ApiStatus.Internal
+public class HighlightDrawerImpl implements HighlightDrawer {
     public static final HighlightDrawerImpl INSTANCE = new HighlightDrawerImpl();
     private static final Identifier TEXTURE = Gimm1q.id("textures/block/white.png");
 
