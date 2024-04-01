@@ -8,12 +8,14 @@ import dev.mim1q.testmod.block.ThumperBlock;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -50,6 +52,14 @@ public class TestMod implements ModInitializer {
                     })
                 )
             );
+        });
+
+        ItemGroupEvents.MODIFY_ENTRIES_ALL.register((group, items) -> {
+            if (group == Registries.ITEM_GROUP.getOrThrow(ItemGroups.TOOLS)) {
+                items.add(HIGHLIGHT_STICK);
+                items.add(THUMPER_BLOCK);
+                items.add(EASING_TESTER);
+            }
         });
     }
 
