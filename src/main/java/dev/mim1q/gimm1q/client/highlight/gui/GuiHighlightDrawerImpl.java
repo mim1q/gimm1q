@@ -1,10 +1,13 @@
 package dev.mim1q.gimm1q.client.highlight.gui;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
+@Environment(EnvType.CLIENT)
 public class GuiHighlightDrawerImpl implements GuiHighlightDrawer {
     public static final GuiHighlightDrawerImpl INSTANCE = new GuiHighlightDrawerImpl();
     private GuiHighlightDrawerContext context = null;

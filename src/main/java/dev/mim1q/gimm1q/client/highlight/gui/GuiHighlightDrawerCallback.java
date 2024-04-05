@@ -1,5 +1,7 @@
 package dev.mim1q.gimm1q.client.highlight.gui;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.entity.player.PlayerEntity;
@@ -25,6 +27,7 @@ import net.minecraft.item.ItemStack;
  * </p>
  */
 @FunctionalInterface
+@Environment(EnvType.CLIENT)
 public interface GuiHighlightDrawerCallback {
     Event<GuiHighlightDrawerCallback> EVENT = EventFactory.createArrayBacked(
         GuiHighlightDrawerCallback.class,

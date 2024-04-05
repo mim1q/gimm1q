@@ -1,6 +1,8 @@
 package dev.mim1q.gimm1q.client.highlight;
 
 import dev.mim1q.gimm1q.Gimm1q;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
@@ -16,6 +18,7 @@ import org.joml.Matrix4f;
 import static net.minecraft.util.math.MathHelper.sign;
 
 @ApiStatus.Internal
+@Environment(EnvType.CLIENT)
 public class HighlightDrawerImpl implements HighlightDrawer {
     public static final HighlightDrawerImpl INSTANCE = new HighlightDrawerImpl();
     private static final Identifier TEXTURE = Gimm1q.id("textures/block/white.png");

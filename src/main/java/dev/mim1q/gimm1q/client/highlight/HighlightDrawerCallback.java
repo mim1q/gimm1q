@@ -1,5 +1,7 @@
 package dev.mim1q.gimm1q.client.highlight;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -25,6 +27,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
  * @see #drawHighlights(HighlightDrawer, HighlightDrawerContext)
  */
 @FunctionalInterface
+@Environment(EnvType.CLIENT)
 public interface HighlightDrawerCallback {
     Event<HighlightDrawerCallback> EVENT = EventFactory.createArrayBacked(
         HighlightDrawerCallback.class,

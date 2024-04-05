@@ -1,5 +1,7 @@
 package dev.mim1q.gimm1q.client.item.handheld;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
 import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.item.Item;
@@ -11,6 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @ApiStatus.Internal
+@Environment(EnvType.CLIENT)
 public final class HandheldItemModelRegistryImpl implements HandheldItemModelRegistry {
     public static final HandheldItemModelRegistry INSTANCE = new HandheldItemModelRegistryImpl();
     public static final Map<Item, Pair<ModelIdentifier, ModelIdentifier>> MODELS = new HashMap<>();

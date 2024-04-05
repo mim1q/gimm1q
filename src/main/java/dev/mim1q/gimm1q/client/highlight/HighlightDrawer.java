@@ -1,5 +1,7 @@
 package dev.mim1q.gimm1q.client.highlight;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
@@ -11,6 +13,7 @@ import net.minecraft.util.math.Box;
  *
  * @see HighlightDrawerCallback
  */
+@Environment(EnvType.CLIENT)
 public interface HighlightDrawer {
     /**
      * Draws a highlight around the given Box.

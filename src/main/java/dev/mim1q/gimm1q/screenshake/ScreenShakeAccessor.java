@@ -1,5 +1,8 @@
 package dev.mim1q.gimm1q.screenshake;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 /**
  * Client-side accessor to make a {@link net.minecraft.client.network.ClientPlayerEntity}'s camera shake
  * <p>
@@ -16,6 +19,7 @@ package dev.mim1q.gimm1q.screenshake;
  * called from the client-side.
  * </p>
  */
+@Environment(EnvType.CLIENT)
 public interface ScreenShakeAccessor {
     /**
      * Shakes the typecast player's camera.

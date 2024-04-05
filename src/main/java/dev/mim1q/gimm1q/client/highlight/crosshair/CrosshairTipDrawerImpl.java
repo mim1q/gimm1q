@@ -1,11 +1,14 @@
 package dev.mim1q.gimm1q.client.highlight.crosshair;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
+@Environment(EnvType.CLIENT)
 public class CrosshairTipDrawerImpl implements CrosshairTipDrawer {
     public static final CrosshairTipDrawerImpl INSTANCE = new CrosshairTipDrawerImpl();
     private DrawContext drawContext = null;

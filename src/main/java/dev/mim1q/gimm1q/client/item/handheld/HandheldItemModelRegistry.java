@@ -1,5 +1,7 @@
 package dev.mim1q.gimm1q.client.item.handheld;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
@@ -27,6 +29,7 @@ import net.minecraft.util.Identifier;
  * corresponding model suffixed with {@code _handheld} for the handheld model.
  * </p>
  */
+@Environment(EnvType.CLIENT)
 public interface HandheldItemModelRegistry {
     /**
      * Register a handheld item model for an Item. Assumes the default model ID for the GUI model, and will use the
