@@ -17,12 +17,12 @@ import net.minecraft.item.ItemStack;
  * and the item stack currently being considered. An example of a highlight drawing callback is shown below.
  * <pre>{@code
  *     GuiHighlightDrawerCallback.register((drawer, context) -> {
- *         var stack = context.stack;
+ *         var stack = context.stack();
  *         if (stack.isIn(HIGHLIGHTED_ITEMS_TAG)) {
  *             // Highlight the item with a custom texture, using a magenta color
  *             drawer.highlightItem(0, 0, 32, 0xFFFF00FF, CUSTOM_HIGHLIGHT_TEXTURE);
  *         }
- *     }
+ *     });
  * }</pre>
  * </p>
  */

@@ -16,7 +16,7 @@ import net.minecraft.entity.player.PlayerEntity;
  * A simple example of how to use this callback is shown below.
  * <pre>{@code
  *     CrosshairTipDrawerCallback.register((drawer, context) -> {
- *         var player = context.player;
+ *         var player = context.player();
  *         if (player.isSneaking()) {
  *             // Draw a custom tip texture, offset by 16 pixels to the right
  *             drawer.drawCrosshairTip(16, 0, PLAYER_SNEAKING_CROSSHAIR_TIP);

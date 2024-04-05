@@ -9,6 +9,8 @@ The name is a play on the word "gimmick" and my nickname "Mim1q" :grin:
 - [Implemented features](#implemented-features)
   - [Screen shaking effects](#screen-shaking-effects)
   - [Block and entity highlighting](#block-and-entity-highlighting)
+  - [In-GUI Item Highlighting](#in-gui-item-highlighting)
+  - [Crosshair tips](#crosshair-tips)
   - [Animation and interpolation utilities](#animation-and-interpolation-utilities)
   - [Handheld item model switching](#handheld-item-model-registering)
 - [Possible future features](#possible-future-features)
@@ -75,6 +77,51 @@ public void onInitializeClient() {
             0x00000000, // The color of the highlight (0xAARRGGBB)
             0xFF000000  // The color of the outline (0xAARRGGBB)
         );
+    });
+}
+```
+
+### In-GUI Item Highlighting
+
+You can also highlight items in the player's hotbar and inventory using a similar callback:
+
+```java
+@Override
+public void onInitializeClient() {
+    GuiHighlightDrawerCallback.register((drawer, context) -> {
+        var stack = context.stack();
+        if (stack.isIn(HIGHLIGHTED_ITEMS_TAG)) {
+            // Highlight the item with a custom texture, using a magenta color
+            drawer.highlightItem(
+                0,                       // Horizontal offset in pixels
+                0,                       // Vertical offset in pixels
+                32,                      // Highlight size in pixels
+                0xFFFF00FF,              // Highlight color (0xAARRGGBB)
+                CUSTOM_HIGHLIGHT_TEXTURE // Texture Identifier
+            );
+        }
+    });
+}
+```
+
+### Crosshair tips
+
+Another feature is the ability to display a little tooltip next to the crosshair using a callback, just like the two
+above.
+
+```java
+@Override
+public void onInitializeClient() {
+    CrosshairTipDrawerCallback.register((drawer, context) -> {
+        var player = context.player();
+        if (player.isSneaking()) {
+            // Draw a custom tip texture, offset by 16 pixels to the right
+            drawer.drawCrosshairTip(
+                16,                           // Horizontal offset in pixels
+                0,                            // Vertical offset in pixels
+                PLAYER_SNEAKING_CROSSHAIR_TIP // Texture Identifier
+            );
+        }
     });
 }
 ```
