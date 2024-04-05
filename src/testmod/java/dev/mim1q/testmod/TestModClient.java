@@ -1,6 +1,7 @@
 package dev.mim1q.testmod;
 
 import dev.mim1q.gimm1q.client.highlight.HighlightDrawerCallback;
+import dev.mim1q.gimm1q.client.highlight.crosshair.CrosshairTipDrawerCallback;
 import dev.mim1q.gimm1q.client.highlight.gui.GuiHighlightDrawerCallback;
 import dev.mim1q.gimm1q.client.item.handheld.HandheldItemModelRegistry;
 import dev.mim1q.testmod.render.EasingTesterRenderer;
@@ -32,6 +33,18 @@ public class TestModClient implements ClientModInitializer {
                 && context.stack().isOf(Items.DIAMOND)
             ) {
                 drawer.highlightItem(0xFFFF0000);
+            }
+        });
+
+        // Crosshair tip
+        CrosshairTipDrawerCallback.register((drawer, context) -> {
+            var player = context.player();
+            if (player.getStackInHand(Hand.MAIN_HAND).isOf(HIGHLIGHT_STICK)) {
+                drawer.drawCrosshairTip(
+                    0, 0,
+                    8,
+                    TestMod.id("textures/gui/crosshair_tip.png")
+                );
             }
         });
 
