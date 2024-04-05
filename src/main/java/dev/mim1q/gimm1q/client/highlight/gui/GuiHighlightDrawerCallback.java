@@ -12,7 +12,7 @@ import net.minecraft.item.ItemStack;
  * Register a callback using {@link #register(GuiHighlightDrawerCallback)}, and it will be called every frame to draw
  * highlights on items in the GUI. The callback should draw highlights using the provided {@link GuiHighlightDrawer}
  * interface. A {@link GuiHighlightDrawerContext context} is provided to the callback, containing data about the player
- * and the item stack currently being considered.
+ * and the item stack currently being considered. An example of a highlight drawing callback is shown below.
  * <pre>{@code
  *     GuiHighlightDrawerCallback.register((drawer, context) -> {
  *         var stack = context.stack;
@@ -40,6 +40,7 @@ public interface GuiHighlightDrawerCallback {
      *
      * @param drawer  The drawing interface for highlights
      * @param context The context for drawing highlights, containing the current player and the item stack
+     * @see GuiHighlightDrawer
      */
     void drawHighlights(GuiHighlightDrawer drawer, GuiHighlightDrawerContext context);
 
