@@ -8,6 +8,8 @@ import net.minecraft.util.math.Box;
 /**
  * API for drawing highlights around blocks, entities or arbitrary boxes. Should only be used when provided by
  * {@link HighlightDrawerCallback#drawHighlights}
+ *
+ * @see HighlightDrawerCallback
  */
 public interface HighlightDrawer {
     /**

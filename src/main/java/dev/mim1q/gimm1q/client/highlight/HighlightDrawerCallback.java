@@ -6,19 +6,19 @@ import net.minecraft.client.network.ClientPlayerEntity;
 
 /**
  * Callback for drawing highlights in the world.
- * 
+ *
  * <p>
- *     Register a callback using {@link #register}, and it will be called every frame to draw highlights in the world.
- *     The callback should draw highlights using the provided {@link HighlightDrawer} interface.
- *     <br>
- *     For example, to draw a green highlight around the block under a player's feet:
- *     <pre>{@code
+ * Register a callback using {@link #register}, and it will be called every frame to draw highlights in the world.
+ * The callback should draw highlights using the provided {@link HighlightDrawer} interface.
+ * <br>
+ * For example, to draw a green highlight around the block under a player's feet:
+ * <pre>{@code
  *     HighlightDrawerCallback.register((drawer, context) -> {
  *         var player = context.player;
  *         var pos = player.getBlockPos().down();
  *         drawer.highlightBlock(pos, 0xFF00FF00); // Green in ARGB format
  *     });
- *     }</pre>
+ * }</pre>
  * </p>
  *
  * @author Mim1q

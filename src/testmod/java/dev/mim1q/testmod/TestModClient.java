@@ -16,7 +16,7 @@ public class TestModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         // Entity highlighting
-        HighlightDrawerCallback.EVENT.register((drawer, context) -> {
+        HighlightDrawerCallback.register((drawer, context) -> {
             var player = context.player();
             if (player.getStackInHand(Hand.MAIN_HAND).isOf(HIGHLIGHT_STICK)) {
                 for (var entity : player.clientWorld.getOtherEntities(player, Box.of(player.getPos(), 32, 32, 32))) {
@@ -25,8 +25,8 @@ public class TestModClient implements ClientModInitializer {
             }
         });
 
-        // Item highlighting
-        GuiHighlightDrawerCallback.EVENT.register((drawer, context) -> {
+        // Item highlighting in GUI
+        GuiHighlightDrawerCallback.register((drawer, context) -> {
             var player = context.player();
             if (player.getStackInHand(Hand.MAIN_HAND).isOf(HIGHLIGHT_STICK)
                 && context.stack().isOf(Items.DIAMOND)
