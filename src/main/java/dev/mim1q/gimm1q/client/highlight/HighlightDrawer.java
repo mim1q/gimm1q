@@ -45,9 +45,9 @@ public interface HighlightDrawer {
      */
     default void highlightBlock(BlockPos pos, int colorArgb, int outlineArgb) {
         drawHighlight(
-                new Box(pos).expand(0.001),
-                colorArgb,
-                outlineArgb
+            new Box(pos).expand(0.001),
+            colorArgb,
+            outlineArgb
         );
     }
 
@@ -74,12 +74,13 @@ public interface HighlightDrawer {
     default void highlightEntity(Entity entity, int colorArgb, int outlineArgb) {
         var tickDelta = MinecraftClient.getInstance().getTickDelta();
         var pos = entity.getLerpedPos(tickDelta);
-        var dxz = (entity.getWidth() / 2) + 0.05;
-        var dy = entity.getHeight() + 0.05;
+        var prevPos = entity.getPos();
+        var offset = pos.subtract(prevPos);
+
         drawHighlight(
-                new Box(pos.x - dxz, pos.y - 0.05, pos.z - dxz, pos.x + dxz, pos.y + dy, pos.z + dxz),
-                colorArgb,
-                outlineArgb
+            entity.getBoundingBox().offset(offset).expand(1.0 / 32.0),
+            colorArgb,
+            outlineArgb
         );
     }
 
