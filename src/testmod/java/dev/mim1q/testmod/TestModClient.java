@@ -1,10 +1,12 @@
 package dev.mim1q.testmod;
 
 import dev.mim1q.gimm1q.client.highlight.HighlightDrawerCallback;
+import dev.mim1q.gimm1q.client.highlight.gui.GuiHighlightDrawerCallback;
 import dev.mim1q.gimm1q.client.item.handheld.HandheldItemModelRegistry;
 import dev.mim1q.testmod.render.EasingTesterRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
+import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 
@@ -13,6 +15,7 @@ import static dev.mim1q.testmod.TestMod.HIGHLIGHT_STICK;
 public class TestModClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        // Entity highlighting
         HighlightDrawerCallback.EVENT.register((drawer, context) -> {
             var player = context.player();
             if (player.getStackInHand(Hand.MAIN_HAND).isOf(HIGHLIGHT_STICK)) {
@@ -22,6 +25,17 @@ public class TestModClient implements ClientModInitializer {
             }
         });
 
+        // Item highlighting
+        GuiHighlightDrawerCallback.EVENT.register((drawer, context) -> {
+            var player = context.player();
+            if (player.getStackInHand(Hand.MAIN_HAND).isOf(HIGHLIGHT_STICK)
+                && context.stack().isOf(Items.DIAMOND)
+            ) {
+                drawer.highlightItem(0xFFFF0000);
+            }
+        });
+
+        // Handheld item model
         HandheldItemModelRegistry.getInstance().register(HIGHLIGHT_STICK);
 
         // Register the EasingTesterRenderer
