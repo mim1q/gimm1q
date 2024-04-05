@@ -70,7 +70,7 @@ An example of highlighting an entity with a black outline and transparent fill c
 ```java
 @Override
 public void onInitializeClient() {
-    HighlightDrawerCallback.EVENT.register((drawer, context) -> {
+    HighlightDrawerCallback.register((drawer, context) -> {
         var entity = /* select the entity to highlight */;
         drawer.highlightEntity(
             entity,     // The entity to highlight
