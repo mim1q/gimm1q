@@ -6,6 +6,7 @@ import dev.mim1q.gimm1q.client.highlight.gui.GuiHighlightDrawerCallback;
 import dev.mim1q.gimm1q.client.item.handheld.HandheldItemModelRegistry;
 import dev.mim1q.testmod.render.EasingTesterRenderer;
 import net.fabricmc.api.ClientModInitializer;
+import net.minecraft.client.item.ModelPredicateProviderRegistry;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
@@ -53,5 +54,9 @@ public class TestModClient implements ClientModInitializer {
 
         // Register the EasingTesterRenderer
         BlockEntityRendererFactories.register(TestMod.EASING_TESTER_BE, EasingTesterRenderer::new);
+
+        ModelPredicateProviderRegistry.register(HIGHLIGHT_STICK, TestMod.id("sneak"), (stack, world, entity, seed) ->
+            entity != null && entity.isSneaking() ? 1.0F : 0.0F
+        );
     }
 }

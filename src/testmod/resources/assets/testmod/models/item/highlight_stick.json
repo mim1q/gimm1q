@@ -1,3 +1,11 @@
 {
-  "parent": "minecraft:item/stick"
+    "parent": "minecraft:item/stick",
+    "overrides": [
+        {
+            "predicate": {
+                "testmod:sneak": 1.0
+            },
+            "model": "minecraft:item/golden_sword"
+        }
+    ]
 }

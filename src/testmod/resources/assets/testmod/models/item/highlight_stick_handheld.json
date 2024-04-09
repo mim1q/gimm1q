@@ -1,4 +1,12 @@
 {
-  "parent": "minecraft:item/blaze_rod",
-  "gui_light": "side"
+    "parent": "minecraft:item/blaze_rod",
+    "gui_light": "side",
+    "overrides": [
+        {
+            "predicate": {
+                "testmod:sneak": 1.0
+            },
+            "model": "minecraft:item/bone"
+        }
+    ]
 }
