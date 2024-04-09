@@ -71,8 +71,8 @@ public abstract class ItemRendererMixin {
                 var override = bakedModel.getOverrides().apply(bakedModel, item, (ClientWorld) world, entity, seed);
 
                 this.renderItem(item, renderMode, leftHanded, matrices, vertexConsumers, light, overlay, override);
+                ci.cancel();
             }
-            ci.cancel();
         }
     }
 }
