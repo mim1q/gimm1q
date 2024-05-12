@@ -6,7 +6,6 @@ plugins {
 
 version = ModData.VERSION
 group = ModData.GROUP
-base.archivesName.set(ModData.ID)
 
 repositories {
 }
