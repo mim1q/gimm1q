@@ -1,5 +1,6 @@
 package dev.mim1q.gimm1q.mixin.client;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.mim1q.gimm1q.interpolation.AnimatedProperty;
 import dev.mim1q.gimm1q.interpolation.Easing;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeAccessor;
@@ -14,24 +15,30 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static net.minecraft.util.math.MathHelper.lerp;
 import static net.minecraft.util.math.MathHelper.sign;
 
 @ApiStatus.Internal
 @Mixin(ClientPlayerEntity.class)
 public abstract class ClientPlayerScreenShakeMixin extends LivingEntity implements ScreenShakeAccessor {
-    @Unique private final AnimatedProperty cameraShakeIntensity = new AnimatedProperty(0.0F);
-    @Unique private float lastIntensity = 0.0f;
-    @Unique private int cameraShakeTicks = 0;
-    @Unique private int cameraShakeDuration = 0;
-    @Unique private float lastCameraShakePitch = 0.0f;
-    @Unique private float cameraShakePitch = 0.0f;
-    @Unique private float lastCameraShakeYaw = 0.0f;
-    @Unique private float cameraShakeYaw = 0.0f;
+    @Unique
+    private final AnimatedProperty cameraShakeIntensity = new AnimatedProperty(0.0F);
+    @Unique
+    private float lastIntensity = 0.0f;
+    @Unique
+    private int cameraShakeTicks = 0;
+    @Unique
+    private int cameraShakeDuration = 0;
+    @Unique
+    private float lastCameraShakePitch = 0.0f;
+    @Unique
+    private float cameraShakePitch = 0.0f;
+    @Unique
+    private float lastCameraShakeYaw = 0.0f;
+    @Unique
+    private float cameraShakeYaw = 0.0f;
 
     protected ClientPlayerScreenShakeMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
@@ -70,22 +77,26 @@ public abstract class ClientPlayerScreenShakeMixin extends LivingEntity implemen
         this.cameraShakeYaw = getNewRotation(this.random, -sign(lastCameraShakeYaw)) * intensity;
     }
 
-    @Inject(method = "getPitch", at = @At("HEAD"), cancellable = true)
-    private void gimm1q$getPitch(float tickDelta, CallbackInfoReturnable<Float> cir) {
-        if (this.cameraShakeDuration > 0) {
-            var pitch = lerp(tickDelta, this.prevPitch, this.getPitch());
-            var addedPitch = easeShake(this.lastCameraShakePitch, this.cameraShakePitch, tickDelta);
-            cir.setReturnValue(pitch + addedPitch);
+    @ModifyReturnValue(
+        method = "getPitch(F)F",
+        at = @At("RETURN")
+    )
+    private float gimm1q$getPitch(float pitch, float tickDelta) {
+        if (this.cameraShakeDuration > 0 && Math.abs(cameraShakePitch) > 0.0001f) {
+            return pitch + easeShake(this.lastCameraShakePitch, this.cameraShakePitch, tickDelta);
         }
+        return pitch;
     }
 
-    @Inject(method = "getYaw", at = @At("HEAD"), cancellable = true)
-    private void gimm1q$getYaw(float tickDelta, CallbackInfoReturnable<Float> cir) {
-        if (this.cameraShakeDuration > 0) {
-            var yaw = lerp(tickDelta, this.prevHeadYaw, this.headYaw);
-            var addedYaw = easeShake(this.lastCameraShakeYaw, this.cameraShakeYaw, tickDelta);
-            cir.setReturnValue(yaw + addedYaw);
+    @ModifyReturnValue(
+        method = "getYaw(F)F",
+        at = @At("RETURN")
+    )
+    private float gimm1q$getYaw(float yaw, float tickDelta) {
+        if (this.cameraShakeDuration > 0 && Math.abs(cameraShakeYaw) > 0.0001f) {
+            return yaw + easeShake(this.lastCameraShakeYaw, this.cameraShakeYaw, tickDelta);
         }
+        return yaw;
     }
 
     @Unique
