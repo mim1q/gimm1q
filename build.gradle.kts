@@ -27,9 +27,10 @@ tasks {
     withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
     }
-    // Jitpack publishing fix
-    withType<GenerateModuleMetadata> {
-        dependsOn("optimizeOutputsOfRemapJar")
+
+    javadoc {
+        // Disable no comment warning
+        (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
     }
 
     jar {
@@ -51,25 +52,6 @@ tasks {
             )
         }
     }
-    // Publish to GitHub Releases
-    register<Exec>("publishToGithub") {
-        group = "publishing"
-        description = "Publishes the current version to GitHub Releases"
-        workingDir = projectDir
-        dependsOn("build")
-
-        val jarName = "${ModData.ID}-${ModData.VERSION}"
-        val changelog = with(file("changelogs/${ModData.VERSION}.md")) {
-            if (exists()) readText() else ""
-        }
-
-        commandLine(
-            "gh", "release",
-            "create", ModData.VERSION, "build/libs/${jarName}.jar" ,
-            "-t", "Gimm1q ${ModData.VERSION_TYPE} ${ModData.VERSION} (${Versions.MINECRAFT})",
-            "-n", changelog,
-        )
-    }
 }
 
 sourceSets {
@@ -77,6 +59,11 @@ sourceSets {
         runtimeClasspath += main.get().runtimeClasspath
         compileClasspath += main.get().compileClasspath
     }
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
 }
 
 loom {
@@ -103,6 +90,16 @@ publishing {
             groupId = ModData.GROUP
             artifactId = ModData.ID
             version = ModData.VERSION
+        }
+    }
+
+    repositories {
+        maven {
+            url = uri("https://repo.repsy.io/mvn/mim1q/mods/")
+            credentials {
+                username = properties["repsyUsername"] as String
+                password = properties["repsyPassword"] as String
+            }
         }
     }
 }

@@ -14,6 +14,7 @@ import net.minecraft.client.network.ClientPlayerEntity;
  * The callback should draw highlights using the provided {@link HighlightDrawer} interface.
  * <br>
  * For example, to draw a green highlight around the block under a player's feet:
+ * </p>
  * <pre>{@code
  *     HighlightDrawerCallback.register((drawer, context) -> {
  *         var player = context.player;
@@ -21,7 +22,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
  *         drawer.highlightBlock(pos, 0xFF00FF00); // Green in ARGB format
  *     });
  * }</pre>
- * </p>
  *
  * @author Mim1q
  * @see #drawHighlights(HighlightDrawer, HighlightDrawerContext)

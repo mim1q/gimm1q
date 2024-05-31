@@ -8,6 +8,7 @@ import org.joml.Math;
  * <p>
  * For example, you can create one of these in an {@link net.minecraft.entity.Entity Entity}-inheriting class and
  * transition it whenever you need on the client-side.
+ * </p>
  * <pre>{@code
  *     public final AnimatedProperty bodyBounce = new AnimatedProperty(
  *         0F,
@@ -17,14 +18,13 @@ import org.joml.Math;
  * <p>
  * And then inside the corresponding {@link net.minecraft.client.render.entity.model.EntityModel EntityModel}'s
  * {@code setAngles} method do something like:
- *
+ * </p>
  * <pre>{@code
  *     // Update the bounce value using the provided animation progress
  *     var bounce = entity.bodyBounce.update(animationProgress);
  *     // Use the bounce value to animate the model
  *     this.root.pivotY = bounce;
  * }</pre>
- * </p>
  *
  * @see Easing Easing functions for interpolation
  */

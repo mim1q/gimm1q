@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
  * highlights on items in the GUI. The callback should draw highlights using the provided {@link GuiHighlightDrawer}
  * interface. A {@link GuiHighlightDrawerContext context} is provided to the callback, containing data about the player
  * and the item stack currently being considered. An example of a highlight drawing callback is shown below.
+ * </p>
  * <pre>{@code
  *     GuiHighlightDrawerCallback.register((drawer, context) -> {
  *         var stack = context.stack();
@@ -24,7 +25,6 @@ import net.minecraft.item.ItemStack;
  *         }
  *     });
  * }</pre>
- * </p>
  */
 @FunctionalInterface
 @Environment(EnvType.CLIENT)
