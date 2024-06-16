@@ -13,7 +13,7 @@ public class Gimm1q implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("Initializing Mim1q's Commons");
+        LOGGER.info("Initializing Gimm1q - Mim1q's Fabric modding library!");
     }
 
     public static Identifier id(String path) {
