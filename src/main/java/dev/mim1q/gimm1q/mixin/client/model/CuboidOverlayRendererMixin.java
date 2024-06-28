@@ -110,20 +110,39 @@ public class CuboidOverlayRendererMixin {
             final var animationProgress = MinecraftClient.getInstance().inGameHud.getTicks() + MinecraftClient.getInstance().getTickDelta();
 
             for (final var quad : this.sides) {
-                var offsetScalar = modelOverlayVertexConsumer.getOffset();
-                final var normalVector = normalMatrix.transform(new Vector3f(quad.direction));
-                var direction = gimm1q$DIRECTION_MAP.get(quad.direction);
+                final var quadDir = gimm1q$isMirrored ? quad.direction.mul(-1f, 1f, 1f, new Vector3f()) : quad.direction;
 
-                final var offset = direction == null ? gimm1q$NO_OFFSETS : gimm1q$OFFSETS.getOrDefault(direction, gimm1q$NO_OFFSETS);
+                var xOffsetScalar = modelOverlayVertexConsumer.getOffset();
+                var yOffsetScalar = modelOverlayVertexConsumer.getOffset();
+                var zOffsetScalar = modelOverlayVertexConsumer.getOffset();
+
+                final var normalVector = normalMatrix.transform(new Vector3f(quad.direction));
+                var direction = gimm1q$DIRECTION_MAP.get(quadDir);
+
+                var offset = gimm1q$NO_OFFSETS;
+                if (direction != null) {
+                    offset = gimm1q$OFFSETS.getOrDefault(direction, gimm1q$NO_OFFSETS);
+
+                    if (gimm1q$isMirrored) {
+                        xOffsetScalar = -xOffsetScalar;
+                        if (direction.getAxis().isVertical()) {
+                            zOffsetScalar = -zOffsetScalar;
+                        } else {
+                            yOffsetScalar = -yOffsetScalar;
+                        }
+                    }
+                }
 
                 for (var i = 0; i < 4; ++i) {
                     final var index = modelOverlayVertexConsumer.isInverted() ? 3 - i : i;
                     final var vertex = quad.vertices[index];
-                    @SuppressWarnings("DataFlowIssue") final var vertexOffsets = offset[index];
 
-                    final var x = (vertex.pos.x() + vertexOffsets[0] * offsetScalar) / 16.0f;
-                    final var y = (vertex.pos.y() + vertexOffsets[1] * offsetScalar) / 16.0f;
-                    final var z = (vertex.pos.z() + vertexOffsets[2] * offsetScalar) / 16.0f;
+                    @SuppressWarnings("DataFlowIssue")
+                    final var vertexOffsets = offset[index];
+
+                    final var x = (vertex.pos.x() + vertexOffsets[0] * xOffsetScalar) / 16.0f;
+                    final var y = (vertex.pos.y() + vertexOffsets[1] * yOffsetScalar) / 16.0f;
+                    final var z = (vertex.pos.z() + vertexOffsets[2] * zOffsetScalar) / 16.0f;
                     final var posVector = posMatrix.transform(new Vector4f(x, y, z, 1.0f));
 
                     final var uv = modelOverlayVertexConsumer.applyUvMapper(
