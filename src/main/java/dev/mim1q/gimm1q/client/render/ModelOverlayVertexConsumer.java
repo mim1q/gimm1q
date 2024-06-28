@@ -101,8 +101,8 @@ public class ModelOverlayVertexConsumer extends WrapperVertexConsumer {
     }
 
     @ApiStatus.Internal
-    public float[] applyUvMapper(float u, float v, float animationProgress, int vertexIndex) {
-        return uvMapper.apply(u, v, animationProgress, vertexIndex);
+    public float[] applyUvMapper(float u, float v, OverlayUvMapperQuadContext context) {
+        return uvMapper.apply(u, v, context);
     }
 
     /**
@@ -121,26 +121,29 @@ public class ModelOverlayVertexConsumer extends WrapperVertexConsumer {
      */
     @FunctionalInterface
     public interface OverlayUvMapper {
-        float[] apply(float u, float v, float animationProgress, int vertexIndex);
+        float[] apply(float u, float v, OverlayUvMapperQuadContext context);
 
         /**
          * @return A mapper that returns the original, unmodified UV coordinates
          */
         static OverlayUvMapper identity() {
-            return (u, v, animationProgress, vertexIndex) -> new float[]{u, v};
+            return (u, v, context) -> new float[]{u, v};
         }
 
         /**
+         * Experimental - may or may not look good. Use with caution.
+         *
          * @param frameCount    The number of frames in the animation
          * @param frameDuration The duration of each frame, in ticks
          * @return A mapper returning a modified V coordinate based on the elapsed time to create a frame animation
          */
+        @ApiStatus.Experimental
         static OverlayUvMapper frameAnimation(int frameCount, float frameDuration) {
             var frameHeight = 1f / frameCount;
 
-            return (u, v, animationProgress, vertexIndex) -> new float[]{
+            return (u, v, context) -> new float[]{
                 u,
-                (v / frameCount) + (frameHeight) * ((int) (animationProgress / frameDuration)) % frameCount
+                (v / frameCount) + (frameHeight) * ((int) (context.animationProgress / frameDuration)) % frameCount
             };
         }
 
@@ -151,9 +154,9 @@ public class ModelOverlayVertexConsumer extends WrapperVertexConsumer {
          * animation
          */
         static OverlayUvMapper verticalScrollAnimation(float scrollSpeed) {
-            return (u, v, animationProgress, vertexIndex) -> new float[]{
+            return (u, v, context) -> new float[]{
                 u,
-                v + (scrollSpeed * animationProgress) % 1
+                v + (scrollSpeed * context.animationProgress) % 1
             };
         }
 
@@ -164,8 +167,8 @@ public class ModelOverlayVertexConsumer extends WrapperVertexConsumer {
          * animation
          */
         static OverlayUvMapper horizontalScrollAnimation(float scrollSpeed) {
-            return (u, v, animationProgress, vertexIndex) -> new float[]{
-                u + (scrollSpeed * animationProgress) % 1,
+            return (u, v, context) -> new float[]{
+                u + (scrollSpeed * context.animationProgress * (context.isMirrored ? -1 : 1)) % 1,
                 v
             };
         }
@@ -173,15 +176,20 @@ public class ModelOverlayVertexConsumer extends WrapperVertexConsumer {
         /**
          * @param horizontalScrollSpeed The speed of the horizontal scroll animation, in U per tick.
          * @param verticalScrollSpeed   The speed of the vertical scroll animation, in V per tick.
-         * @return A mapper returning a modified U and V coordinate based on the elapsed time to create a diagonally
+         * @return A mapper returning modified U and V coordinates based on the elapsed time to create a diagonally
          * scrolling animation
          */
         static OverlayUvMapper diagonalScrollAnimation(float horizontalScrollSpeed, float verticalScrollSpeed) {
-            return (u, v, animationProgress, vertexIndex) -> new float[]{
-                u + (horizontalScrollSpeed * animationProgress) % 1,
-                v + (verticalScrollSpeed * animationProgress) % 1
+            return (u, v, context) -> new float[]{
+                u + (horizontalScrollSpeed * context.animationProgress * (context.isMirrored ? -1 : 1)) % 1,
+                v + (verticalScrollSpeed * context.animationProgress) % 1
             };
         }
-
     }
+
+    public record OverlayUvMapperQuadContext(
+        float animationProgress,
+        int vertexIndex,
+        boolean isMirrored
+    ) {}
 }

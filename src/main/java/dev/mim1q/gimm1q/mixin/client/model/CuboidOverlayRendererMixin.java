@@ -2,6 +2,7 @@ package dev.mim1q.gimm1q.mixin.client.model;
 
 import com.google.common.collect.ImmutableMap;
 import dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer;
+import dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer.OverlayUvMapperQuadContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumer;
@@ -148,8 +149,11 @@ public class CuboidOverlayRendererMixin {
                     final var uv = modelOverlayVertexConsumer.applyUvMapper(
                         vertex.u * gimm1q$textureWidth / modelOverlayVertexConsumer.getTextureSize(),
                         vertex.v * gimm1q$textureHeight / modelOverlayVertexConsumer.getTextureSize(),
-                        animationProgress,
-                        index
+                        new OverlayUvMapperQuadContext(
+                            animationProgress,
+                            index,
+                            gimm1q$isMirrored
+                        )
                     );
 
                     vertexConsumer.vertex(

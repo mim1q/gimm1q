@@ -2,6 +2,7 @@ package dev.mim1q.testmod.item;
 
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer;
+import dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer.OverlayUvMapper;
 import dev.mim1q.gimm1q.client.render.WrapperVertexConsumer;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.render.RenderLayer;
@@ -21,6 +22,14 @@ import java.util.List;
 import static dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer.OverlayUvMapper.*;
 
 public class OverlayTesterItem extends Item {
+    // Important note:
+    // OverlayUvMappers should be created like this, and not in the VertexConsumer builder, to prevent instantiating
+    // them every frame.
+    private static final OverlayUvMapper FRAME_ANIMATION_UV_MAPPER = frameAnimation(4, 10f);
+    private static final OverlayUvMapper VERTICALLY_SCROLLING_UV_MAPPER = verticalScrollAnimation(0.05f);
+    private static final OverlayUvMapper HORIZONTALLY_SCROLLING_UV_MAPPER = horizontalScrollAnimation(0.05f);
+    private static final OverlayUvMapper DIAGONALLY_SCROLLING_UV_MAPPER = diagonalScrollAnimation(0.05f, -0.02f);
+
     public OverlayTesterItem(Settings settings) {
         super(settings);
     }
@@ -67,23 +76,22 @@ public class OverlayTesterItem extends Item {
                 vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(new Identifier("textures/block/stone.png")));
             case 2 ->
                 vertexConsumers.getBuffer(RenderLayer.getEntityCutout(new Identifier("textures/entity/zombie/zombie.png")));
-            case 3 ->
-                vertexConsumers.getBuffer(RenderLayer.getEyes(Gimm1q.id("textures/block/white.png")));
+            case 3 -> vertexConsumers.getBuffer(RenderLayer.getEyes(Gimm1q.id("textures/block/white.png")));
             case 4 ->
-                vertexConsumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(new Identifier("textures/block/fire_0.png")));
+                vertexConsumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(new Identifier("textures/block/prismarine.png")));
             default -> null;
         };
 
         if (consumer == null) return null;
 
         return switch (i) {
-            case 1 -> ModelOverlayVertexConsumer.of(consumer).skipPlanes();
+            case 1 -> ModelOverlayVertexConsumer.of(consumer);
             case 2 -> ModelOverlayVertexConsumer.of(consumer).textureSize(64).offset(0.2f);
-            case 3 -> ModelOverlayVertexConsumer.of(consumer).inverted().offset(0.5f);
-            case 4 -> ModelOverlayVertexConsumer.of(consumer).mapUv(frameAnimation(32, 1f));
-            case 5 -> ModelOverlayVertexConsumer.of(consumer).mapUv(verticalScrollAnimation(0.02f));
-            case 6 -> ModelOverlayVertexConsumer.of(consumer).mapUv(horizontalScrollAnimation(0.04f));
-            case 7 -> ModelOverlayVertexConsumer.of(consumer).mapUv(diagonalScrollAnimation(0.02f, -0.02f));
+            case 3 -> ModelOverlayVertexConsumer.of(consumer).inverted().skipPlanes();
+            case 4 -> ModelOverlayVertexConsumer.of(consumer).mapUv(FRAME_ANIMATION_UV_MAPPER);
+            case 5 -> ModelOverlayVertexConsumer.of(consumer).mapUv(VERTICALLY_SCROLLING_UV_MAPPER);
+            case 6 -> ModelOverlayVertexConsumer.of(consumer).mapUv(HORIZONTALLY_SCROLLING_UV_MAPPER);
+            case 7 -> ModelOverlayVertexConsumer.of(consumer).mapUv(DIAGONALLY_SCROLLING_UV_MAPPER);
             default -> null;
         };
     }
