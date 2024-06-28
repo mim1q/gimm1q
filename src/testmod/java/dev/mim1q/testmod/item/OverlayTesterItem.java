@@ -1,8 +1,8 @@
 package dev.mim1q.testmod.item;
 
 import dev.mim1q.gimm1q.Gimm1q;
-import dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer;
-import dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer.OverlayUvMapper;
+import dev.mim1q.gimm1q.client.render.overlay.ModelOverlayVertexConsumer;
+import dev.mim1q.gimm1q.client.render.overlay.OverlayUvMapper;
 import dev.mim1q.gimm1q.client.render.WrapperVertexConsumer;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.render.RenderLayer;
@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
-import static dev.mim1q.gimm1q.client.render.ModelOverlayVertexConsumer.OverlayUvMapper.*;
+import static dev.mim1q.gimm1q.client.render.overlay.OverlayUvMapper.*;
 
 public class OverlayTesterItem extends Item {
     // Important note:
