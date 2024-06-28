@@ -5,6 +5,7 @@ import dev.mim1q.gimm1q.screenshake.ScreenShakeModifiers;
 import dev.mim1q.testmod.block.EasingTesterBlock;
 import dev.mim1q.testmod.block.EasingTesterBlockEntity;
 import dev.mim1q.testmod.block.ThumperBlock;
+import dev.mim1q.testmod.item.OverlayTesterItem;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -37,6 +38,7 @@ public class TestMod implements ModInitializer {
         id("easing_tester"),
         BlockEntityType.Builder.create(EasingTesterBlockEntity::new, EASING_TESTER).build(null)
     );
+    public static final OverlayTesterItem OVERLAY_TESTER = registerItem("overlay_tester", new OverlayTesterItem(new FabricItemSettings()));
 
     @Override
     public void onInitialize() {

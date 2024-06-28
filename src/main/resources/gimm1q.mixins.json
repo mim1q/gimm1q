@@ -1,12 +1,13 @@
 {
-  "required": false,
-  "minVersion": "0.8",
-  "package": "dev.mim1q.gimm1q.mixin",
-  "mixins": [
-  ],
-  "client": [
-    "client.ClientPlayerScreenShakeMixin",
-    "client.DrawContextMixin",
-    "client.item.ItemRendererMixin"
+    "required": false,
+    "minVersion": "0.8",
+    "package": "dev.mim1q.gimm1q.mixin",
+    "mixins": [
+    ],
+    "client": [
+        "client.ClientPlayerScreenShakeMixin",
+        "client.DrawContextMixin",
+        "client.item.ItemRendererMixin",
+        "client.model.CuboidOverlayRendererMixin"
   ]
 }

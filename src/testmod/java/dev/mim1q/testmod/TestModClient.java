@@ -4,15 +4,26 @@ import dev.mim1q.gimm1q.client.highlight.HighlightDrawerCallback;
 import dev.mim1q.gimm1q.client.highlight.crosshair.CrosshairTipDrawerCallback;
 import dev.mim1q.gimm1q.client.highlight.gui.GuiHighlightDrawerCallback;
 import dev.mim1q.gimm1q.client.item.handheld.HandheldItemModelRegistry;
+import dev.mim1q.testmod.item.OverlayTesterItem;
 import dev.mim1q.testmod.render.EasingTesterRenderer;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.item.ModelPredicateProviderRegistry;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactories;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.client.render.entity.feature.FeatureRenderer;
+import net.minecraft.client.render.entity.model.EntityModel;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Box;
 
 import static dev.mim1q.testmod.TestMod.HIGHLIGHT_STICK;
+import static dev.mim1q.testmod.TestMod.OVERLAY_TESTER;
 
 public class TestModClient implements ClientModInitializer {
     @Override
@@ -58,5 +69,26 @@ public class TestModClient implements ClientModInitializer {
         ModelPredicateProviderRegistry.register(HIGHLIGHT_STICK, TestMod.id("sneak"), (stack, world, entity, seed) ->
             entity != null && entity.isSneaking() ? 1.0F : 0.0F
         );
+
+
+        LivingEntityFeatureRendererRegistrationCallback.EVENT.register((entityType, entityRenderer, registrationHelper, context) -> {
+            //noinspection unchecked
+            registrationHelper.register(new FeatureRenderer<>((LivingEntityRenderer<LivingEntity, EntityModel<LivingEntity>>) entityRenderer) {
+                @Override
+                public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, LivingEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
+                    var player = MinecraftClient.getInstance().player;
+                    if (player == null) return;
+
+                    var item = player.getMainHandStack();
+                    if (item.isOf(OVERLAY_TESTER)) {
+                        var consumer = OverlayTesterItem.getVertexConsumer(vertexConsumers, item);
+                        if (consumer == null) return;
+                        getContextModel().render(
+                            matrices, consumer, light, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f
+                        );
+                    }
+                }
+            });
+        });
     }
 }

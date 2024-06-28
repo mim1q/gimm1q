@@ -19,7 +19,6 @@ dependencies {
 
     afterEvaluate {
         "testmodImplementation"(sourceSets.main.get().output)
-        "testmodImplementation"(sourceSets.main.get().output)
     }
 }
 
@@ -58,6 +57,8 @@ sourceSets {
     create("testmod") {
         runtimeClasspath += main.get().runtimeClasspath
         compileClasspath += main.get().compileClasspath
+        compileClasspath += sourceSets.getByName("testmod").compileClasspath
+        runtimeClasspath += sourceSets.getByName("testmod").runtimeClasspath
     }
 }
 
