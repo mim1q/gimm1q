@@ -3,7 +3,6 @@ package dev.mim1q.testmod.item;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.client.render.overlay.ModelOverlayVertexConsumer;
 import dev.mim1q.gimm1q.client.render.overlay.OverlayUvMapper;
-import dev.mim1q.gimm1q.client.render.WrapperVertexConsumer;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -68,7 +67,7 @@ public class OverlayTesterItem extends Item {
         };
     }
 
-    public static WrapperVertexConsumer getVertexConsumer(VertexConsumerProvider vertexConsumers, ItemStack stack) {
+    public static ModelOverlayVertexConsumer getVertexConsumer(VertexConsumerProvider vertexConsumers, ItemStack stack) {
         int i = stack.getOrCreateNbt().getInt("overlay");
 
         var consumer = switch (i) {

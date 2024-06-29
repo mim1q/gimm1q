@@ -9,5 +9,5 @@
         "client.DrawContextMixin",
         "client.item.ItemRendererMixin",
         "client.model.CuboidOverlayRendererMixin"
-  ]
+    ]
 }
