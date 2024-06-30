@@ -8,6 +8,8 @@
         "client.ClientPlayerScreenShakeMixin",
         "client.DrawContextMixin",
         "client.item.ItemRendererMixin",
-        "client.model.CuboidOverlayRendererMixin"
+        "client.model.CuboidOverlayRendererMixin",
+        "client.model.EntityModelMixin",
+        "client.model.feature.FeatureRendererMixin"
     ]
 }

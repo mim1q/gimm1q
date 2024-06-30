@@ -18,7 +18,7 @@ public interface OverlayUvMapper {
     }
 
     /**
-     * Experimental - may or may not look good. Use with caution.
+     * Experimental - may or may not look good. Use with caution, and prefer large textures.
      *
      * @param frameCount    The number of frames in the animation
      * @param frameDuration The duration of each frame, in ticks

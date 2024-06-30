@@ -32,6 +32,7 @@ public class TestModClient implements ClientModInitializer {
                 for (var entity : player.clientWorld.getOtherEntities(player, Box.of(player.getPos(), 32, 32, 32))) {
                     drawer.highlightEntity(entity, 0x00000000, 0xFF000000);
                 }
+                drawer.highlightBlock(player.getBlockPos().down(), 0x00000000, 0xFF000000);
             }
         });
 
@@ -80,7 +81,8 @@ public class TestModClient implements ClientModInitializer {
                     var player = MinecraftClient.getInstance().player;
                     if (player == null) return null;
                     return OverlayTesterItem.getVertexConsumer(v, player.getMainHandStack());
-                }
+                },
+                true
             ).apply((FeatureRendererContext<LivingEntity, EntityModel<LivingEntity>>) entityRenderer));
         });
     }

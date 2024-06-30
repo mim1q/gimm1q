@@ -75,7 +75,8 @@ public class OverlayTesterItem extends Item {
                 vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(new Identifier("textures/block/stone.png")));
             case 2 ->
                 vertexConsumers.getBuffer(RenderLayer.getEntityCutout(new Identifier("textures/entity/zombie/zombie.png")));
-            case 3 -> vertexConsumers.getBuffer(RenderLayer.getEyes(Gimm1q.id("textures/block/white.png")));
+            case 3 ->
+                vertexConsumers.getBuffer(RenderLayer.getEyes(Gimm1q.id("textures/block/white.png")));
             case 4 ->
                 vertexConsumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(new Identifier("textures/block/prismarine.png")));
             default -> null;
