@@ -27,6 +27,10 @@ tasks {
         options.encoding = "UTF-8"
     }
 
+    withType<GenerateModuleMetadata> {
+        dependsOn("optimizeOutputsOfRemapJar")
+    }
+
     javadoc {
         // Disable no comment warning
         (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
@@ -34,9 +38,10 @@ tasks {
 
     jar {
         from("LICENSE") {
-            rename { "${it}_${ModData.GROUP}"}
+            rename { "${it}_${ModData.GROUP}" }
         }
     }
+
     processResources {
         inputs.property("version", ModData.VERSION)
         inputs.property("minecraft_version", Versions.MINECRAFT)
@@ -50,6 +55,29 @@ tasks {
                 "loader_version" to Versions.FABRIC_LOADER
             )
         }
+    }
+
+    // Publish to GitHub Releases
+    register<Exec>("publishToGithub") {
+        group = "publishing"
+        description = "Publishes the current version to GitHub Releases"
+        workingDir = projectDir
+        dependsOn("build")
+
+        val jarName = "${ModData.ID}-${ModData.VERSION}"
+        val changelog = with(file("changelogs/${ModData.VERSION}.md")) {
+            if (exists()) readText() else ""
+        }
+
+        commandLine(
+            "gh", "release",
+            "create", ModData.VERSION,
+            "build/libs/${jarName}.jar",
+            "build/libs/${jarName}-javadoc.jar",
+            "build/libs/${jarName}-sources.jar",
+            "-t", "Gimm1q ${ModData.VERSION_TYPE} ${ModData.VERSION}",
+            "-n", changelog,
+        )
     }
 }
 
