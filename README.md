@@ -164,20 +164,20 @@ This will load the declared models for you and automatically render the correct 
 
 ## Usage
 
-Gimm1q uses JitPack for distribution. (That might change in the future, though)  
+Gimm1q uses a maven repository for distribution.
 To use it in your mod, add the following to your `build.gradle.kts` file's dependencies and repositories sections:
 
 ```kotlin
 repositories {
-    maven("https://jitpack.io") // JitPack repository for Gimm1q
+    maven("https://maven.mim1q.dev") // Maven repository for Gimm1q
 }
 
 dependencies {
     modImplementation(include("com.github.mim1q:gimm1q:${Versions.GIMM1Q}")!!)
 }
 ```
-Replace `${Versions.GIMM1Q}` with the version you want to use. The versions are available on 
-[JitPack](https://jitpack.io/#mim1q/gimm1q). 
+Replace `${Versions.GIMM1Q}` with the version you want to use. The available version can be found 
+[here](https://maven.mim1q.dev/dev/mim1q/gimm1q/). 
 
 Alternatively you can head to the 
 [releases page](https://github.com/mim1q/gimm1q/releases), download the jar manually and figure out how to include it

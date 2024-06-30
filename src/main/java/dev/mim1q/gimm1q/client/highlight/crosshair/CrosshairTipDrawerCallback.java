@@ -14,6 +14,7 @@ import net.minecraft.entity.player.PlayerEntity;
  * the given texture next to / on top of the crosshair. The callback should draw the tip using the provided
  * {@link CrosshairTipDrawer} interface. A {@link CrosshairTipDrawerContext context} is provided to the callback.
  * A simple example of how to use this callback is shown below.
+ * </p>
  * <pre>{@code
  *     CrosshairTipDrawerCallback.register((drawer, context) -> {
  *         var player = context.player();
@@ -23,7 +24,6 @@ import net.minecraft.entity.player.PlayerEntity;
  *         }
  *     });
  * }</pre>
- * </p>
  */
 @FunctionalInterface
 @Environment(EnvType.CLIENT)
