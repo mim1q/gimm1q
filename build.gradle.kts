@@ -22,6 +22,14 @@ dependencies {
     }
 }
 
+java {
+    withSourcesJar()
+    withJavadocJar()
+
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+
 tasks {
     withType<JavaCompile>().configureEach {
         options.encoding = "UTF-8"
@@ -88,11 +96,6 @@ sourceSets {
         compileClasspath += sourceSets.getByName("testmod").compileClasspath
         runtimeClasspath += sourceSets.getByName("testmod").runtimeClasspath
     }
-}
-
-java {
-    withSourcesJar()
-    withJavadocJar()
 }
 
 loom {
