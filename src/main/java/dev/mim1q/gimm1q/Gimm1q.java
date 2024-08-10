@@ -2,7 +2,6 @@ package dev.mim1q.gimm1q;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
-import dev.mim1q.gimm1q.valuecalculators.ValueCalculator;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;

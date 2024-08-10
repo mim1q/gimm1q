@@ -15,4 +15,8 @@ public record ValueCalculator(
     double calculate() {
         return calculate(ValueCalculatorContext.create());
     }
+
+    public static ValueCalculator of(Identifier id, String name) {
+        return new ValueCalculator(id, name);
+    }
 }

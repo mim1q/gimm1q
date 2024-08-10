@@ -7,10 +7,13 @@
         "c": {
             "type": "gimm1q:attribute",
             "attribute": "generic.movement_speed"
-        }
+        },
+        "d": 1.0,
+        "e": 2
     },
     "values": {
-        "a": "t",
-        "b": "t * 2 + c"
+        "d": "d",
+        "e": "e",
+        "de": "d + e"
     }
 }

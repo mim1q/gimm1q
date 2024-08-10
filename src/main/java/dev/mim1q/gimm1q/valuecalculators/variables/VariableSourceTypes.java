@@ -5,7 +5,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.StringIdentifiable;
 
@@ -15,13 +18,19 @@ public final class VariableSourceTypes {
     public static final VariableSourceType<?> CONSTANT =
         VariableSource.register(Gimm1q.id("constant"), Constant.CODEC);
 
+    public static final VariableSourceType<?> EQUATION =
+        VariableSource.register(Gimm1q.id("equation"), Equation.CODEC);
+
     public static final VariableSourceType<?> ATTRIBUTE =
         VariableSource.register(Gimm1q.id("attribute"), Attribute.CODEC);
+
+    public static final VariableSourceType<?> ENCHANTMENT =
+        VariableSource.register(Gimm1q.id("enchantment"), Enchantment.CODEC);
 
     public static void init() {
     }
 
-    private record Constant(
+    public record Constant(
         double value
     ) implements VariableSource {
         public static final Codec<Constant> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -36,6 +45,21 @@ public final class VariableSourceTypes {
         @Override
         public VariableSourceType<? extends VariableSource> getType() {
             return CONSTANT;
+        }
+    }
+
+    public record Equation(
+        String equation
+    ) implements VariableSource {
+        // TODO: Implement this
+        @Override
+        public double evaluate(ValueCalculatorContext context) {
+            return 0;
+        }
+
+        @Override
+        public VariableSourceType<? extends VariableSource> getType() {
+            return EQUATION;
         }
     }
 
@@ -58,9 +82,7 @@ public final class VariableSourceTypes {
 
         @Override
         public double evaluate(ValueCalculatorContext context) {
-            var parameter = selector == EntitySelector.THIS
-                ? ValueCalculatorParameter.HOLDER
-                : ValueCalculatorParameter.TARGET;
+            var parameter = selector.parameter;
 
             return context.mapOrDefault(
                 parameter,
@@ -78,22 +100,61 @@ public final class VariableSourceTypes {
 
         @Override
         public List<ValueCalculatorParameter<?>> getRequiredParameters() {
-            if (selector == EntitySelector.THIS) {
-                return List.of(ValueCalculatorParameter.HOLDER);
-            } else {
-                return List.of(ValueCalculatorParameter.TARGET);
-            }
+            return List.of(selector.parameter);
+        }
+    }
+
+    private record Enchantment(
+        net.minecraft.enchantment.Enchantment enchantment
+    ) implements VariableSource {
+        public static final Codec<Enchantment> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Registries.ENCHANTMENT.getCodec()
+                .fieldOf("enchantment")
+                .forGetter(Enchantment::enchantment)
+        ).apply(instance, Enchantment::new));
+
+        @Override
+        public double evaluate(ValueCalculatorContext context) {
+            var stack = context.mapOrDefault(
+                ValueCalculatorParameter.HOLDER_STACK,
+                it -> it,
+                context.mapOrDefault(
+                    ValueCalculatorParameter.HOLDER,
+                    it -> it.getStackInHand(it.getActiveHand()),
+                    ItemStack.EMPTY
+                )
+            );
+
+            return EnchantmentHelper.getLevel(enchantment, stack);
+        }
+
+        @Override
+        public List<ValueCalculatorParameter<?>> getRequiredParameters() {
+            return List.of(ValueCalculatorParameter.HOLDER);
+        }
+
+        @Override
+        public VariableSourceType<? extends VariableSource> getType() {
+            return ENCHANTMENT;
         }
     }
 
     public enum EntitySelector implements StringIdentifiable {
-        THIS("this"),
-        TARGET("target");
+        THIS("this", ValueCalculatorParameter.HOLDER, ValueCalculatorParameter.HOLDER_STACK),
+        TARGET("target", ValueCalculatorParameter.TARGET, ValueCalculatorParameter.TARGET_STACK);
 
         private final String name;
+        public final ValueCalculatorParameter<LivingEntity> parameter;
+        public final ValueCalculatorParameter<ItemStack> itemParameter;
 
-        EntitySelector(String name) {
+        EntitySelector(
+            String name,
+            ValueCalculatorParameter<LivingEntity> parameter,
+            ValueCalculatorParameter<ItemStack> itemParameter
+        ) {
             this.name = name;
+            this.parameter = parameter;
+            this.itemParameter = itemParameter;
         }
 
         @Override
