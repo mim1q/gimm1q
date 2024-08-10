@@ -20,6 +20,8 @@ dependencies {
     afterEvaluate {
         "testmodImplementation"(sourceSets.main.get().output)
     }
+
+    include("net.objecthunter:exp4j:0.4.8")
 }
 
 java {
