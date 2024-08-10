@@ -1,0 +1,16 @@
+{
+    "variables": {
+        "t": {
+            "type": "gimm1q:constant",
+            "value": 1.0
+        },
+        "c": {
+            "type": "gimm1q:attribute",
+            "attribute": "generic.movement_speed"
+        }
+    },
+    "values": {
+        "a": "t",
+        "b": "t * 2 + c"
+    }
+}
