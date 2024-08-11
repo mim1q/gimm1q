@@ -35,7 +35,7 @@ public class Gimm1q implements ModInitializer {
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(ValueCalculatorResourceReloader.INSTANCE);
 
         // Utility command for testing Value Calculators
-        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
             dispatcher.register(literal("gimm1q:calculate_value")
                 .requires(source -> source.hasPermissionLevel(2))
                 .then(argument("id", IdentifierArgumentType.identifier())
@@ -77,8 +77,8 @@ public class Gimm1q implements ModInitializer {
                         )
                     )
                 )
-            );
-        });
+            )
+        );
     }
 
     public static Identifier id(String path) {

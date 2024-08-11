@@ -1,12 +1,14 @@
 {
-    "variables": {
-        "a": "e",
-        "b": "c+d+sin(1)",
-        "d": "e+c",
-        "e": "50+40",
-        "c": 1.0
-    },
-    "values": {
-        "e": "d+b"
+  "variables": {
+    "rng": {
+      "type": "gimm1q:condition",
+      "condition": {
+        "condition": "minecraft:random_chance",
+        "chance": 0.5
+      }
     }
+  },
+  "values": {
+    "e": "rng"
+  }
 }

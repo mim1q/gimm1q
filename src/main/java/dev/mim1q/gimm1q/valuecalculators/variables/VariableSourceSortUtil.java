@@ -17,10 +17,13 @@ public class VariableSourceSortUtil {
             var source = entry.getValue();
             allVariables.add(varName);
 
-            if (source instanceof VariableSourceTypes.Equation equation) {
+            if (source instanceof VariableSourceWithDependencies sourceWithDependencies) {
                 dependencyGraph.put(
                     varName,
-                    Arrays.stream(equation.potentialVariables).filter(variableNames::contains).toList()
+                    Arrays
+                        .stream(sourceWithDependencies.getPotentialVariableNames())
+                        .filter(variableNames::contains)
+                        .toList()
                 );
             } else {
                 dependencyGraph.put(varName, Collections.emptyList());

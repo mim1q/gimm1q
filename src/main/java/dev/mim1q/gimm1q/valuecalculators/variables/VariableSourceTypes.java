@@ -3,19 +3,27 @@ package dev.mim1q.gimm1q.valuecalculators.variables;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
+import dev.mim1q.gimm1q.valuecalculators.internal.LootConditionSerialization;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.loot.condition.LootCondition;
+import net.minecraft.loot.context.LootContext;
+import net.minecraft.loot.context.LootContextParameterSet;
+import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.Registries;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.StringIdentifiable;
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public final class VariableSourceTypes {
     public static final VariableSourceType<?> CONSTANT =
@@ -29,6 +37,9 @@ public final class VariableSourceTypes {
 
     public static final VariableSourceType<?> ENCHANTMENT =
         VariableSource.register(Gimm1q.id("enchantment"), Enchantment.CODEC);
+
+    public static final VariableSourceType<?> CONDITION =
+        VariableSource.register(Gimm1q.id("condition"), Condition.CODEC);
 
     public static void init() {
     }
@@ -51,12 +62,12 @@ public final class VariableSourceTypes {
         }
     }
 
-    public static class Equation implements VariableSource {
+    public static class Equation implements VariableSourceWithDependencies {
         public final String expressionString;
         private boolean setup = false;
         private final ExpressionBuilder expressionBuilder;
         private Expression currentExpression = null;
-        final String[] potentialVariables;
+        private final String[] potentialVariables;
 
         Equation(String expression) {
             this.expressionString = expression;
@@ -77,6 +88,11 @@ public final class VariableSourceTypes {
 
             currentExpression = expressionBuilder.build();
             currentExpression.setVariables(previousVariables);
+        }
+
+        @Override
+        public String[] getPotentialVariableNames() {
+            return potentialVariables;
         }
 
         @Override
@@ -165,6 +181,54 @@ public final class VariableSourceTypes {
         @Override
         public VariableSourceType<? extends VariableSource> getType() {
             return ENCHANTMENT;
+        }
+    }
+
+    private record Condition(
+        LootCondition condition,
+        VariableSource ifTrue,
+        VariableSource ifFalse
+    ) implements VariableSource {
+        public static final Codec<Condition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            LootConditionSerialization.CODEC
+                .fieldOf("condition")
+                .forGetter(Condition::condition),
+            VariableSource.CODEC
+                .optionalFieldOf("if_true", new VariableSourceTypes.Constant(1.0))
+                .forGetter(Condition::ifTrue),
+            VariableSource.CODEC
+                .optionalFieldOf("if_false", new VariableSourceTypes.Constant(0.0))
+                .forGetter(Condition::ifFalse)
+        ).apply(instance, Condition::new));
+
+
+        @Override
+        public double evaluate(ValueCalculatorContext context) {
+            var holder = context.get(ValueCalculatorParameter.HOLDER);
+            if (holder == null || holder.getWorld().isClient()) {
+                return 0.0;
+            }
+
+            var lootContext = new LootContext.Builder(
+                new LootContextParameterSet(
+                    (ServerWorld) holder.getWorld(),
+                    Map.of(
+                        LootContextParameters.THIS_ENTITY,
+                        Objects.requireNonNull(context.get(ValueCalculatorParameter.HOLDER))
+                    ),
+                    Map.of(),
+                    (holder instanceof PlayerEntity player) ? player.getLuck() : 0f
+                )
+            ).build(null);
+
+            return condition.test(lootContext)
+                ? ifTrue.evaluate(context)
+                : ifFalse.evaluate(context);
+        }
+
+        @Override
+        public VariableSourceType<? extends VariableSource> getType() {
+            return CONDITION;
         }
     }
 
