@@ -59,10 +59,17 @@ public class Gimm1q implements ModInitializer {
                                             .with(ValueCalculatorParameter.HOLDER, (LivingEntity) holder)
                                     );
 
-                                    context.getSource().sendFeedback(
-                                        () -> Text.literal("Value calculated for " + id + "." + name + ": " + value),
-                                        true
-                                    );
+                                    if (value.isPresent()) {
+                                        context.getSource().sendFeedback(
+                                            () -> Text.literal("Value calculated for " + id + "." + name + ": " + value.get()),
+                                            true
+                                        );
+                                    } else {
+                                        context.getSource().sendError(
+                                            Text.literal("Value calculator not found: " + id + "." + name)
+                                        );
+                                        return 1;
+                                    }
 
                                     return 0;
                                 })

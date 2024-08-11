@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ValueCalculatorResourceReloader implements SimpleSynchronousResourceReloadListener {
@@ -61,21 +62,21 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         });
     }
 
-    public double calculate(Identifier id, String name, ValueCalculatorContext context) {
+    public Optional<Double> calculate(Identifier id, String name, ValueCalculatorContext context) {
         var list = map.get(id);
         if (list == null) {
             Gimm1q.LOGGER.error("Value Calculator file not found: {}. Defaulting to 0.0", id);
-            return 0.0;
+            return Optional.empty();
         }
 
         for (var it : list) {
             var exp = it.tryCalculateExpression(name, context);
             if (exp.isPresent()) {
-                return exp.get();
+                return exp;
             }
         }
 
         Gimm1q.LOGGER.error("Value Calculator expression not found: {}.{}. Defaulting to 0.0", id, name);
-        return 0.0;
+        return Optional.empty();
     }
 }
