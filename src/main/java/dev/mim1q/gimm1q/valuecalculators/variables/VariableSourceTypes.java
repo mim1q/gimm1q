@@ -56,10 +56,17 @@ public final class VariableSourceTypes {
         private boolean setup = false;
         private final ExpressionBuilder expressionBuilder;
         private Expression currentExpression = null;
+        final String[] potentialVariables;
 
         Equation(String expression) {
             this.expressionString = expression;
             this.expressionBuilder = new ExpressionBuilder(expressionString);
+            // Splits the expression into potential variable names. This will include function names,
+            // but it will check for names in the variable set anyway, so any non-variables will be ignored.
+
+            // This is needed for the expression to be sorted properly, so all its dependencies are evaluated before
+            // itself
+            potentialVariables = expressionString.split("\\b(?![a-z]*\\d+[a-z]*$)[^a-z]*\\b");
         }
 
         public void setupExpressionBuilder(Map<String, Double> previousVariables) {

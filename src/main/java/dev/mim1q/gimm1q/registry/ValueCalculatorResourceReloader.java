@@ -52,6 +52,8 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
                             );
                         } catch (IOException e) {
                             throw new RuntimeException(e);
+                        } catch (IllegalStateException e) {
+                            throw new RuntimeException("Failed to create value calculator: " + newId, e);
                         }
                     }
                 );
