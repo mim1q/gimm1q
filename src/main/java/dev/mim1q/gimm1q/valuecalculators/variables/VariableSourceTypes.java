@@ -11,8 +11,11 @@ import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.StringIdentifiable;
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ExpressionBuilder;
 
 import java.util.List;
+import java.util.Map;
 
 public final class VariableSourceTypes {
     public static final VariableSourceType<?> CONSTANT =
@@ -48,13 +51,32 @@ public final class VariableSourceTypes {
         }
     }
 
-    public record Equation(
-        String equation
-    ) implements VariableSource {
-        // TODO: Implement this
+    public static class Equation implements VariableSource {
+        public final String expressionString;
+        private boolean setup = false;
+        private final ExpressionBuilder expressionBuilder;
+        private Expression currentExpression = null;
+
+        Equation(String expression) {
+            this.expressionString = expression;
+            this.expressionBuilder = new ExpressionBuilder(expressionString);
+        }
+
+        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
+            if (!setup) {
+                setup = true;
+                expressionBuilder.variables(previousVariables.keySet());
+            }
+
+            currentExpression = expressionBuilder.build();
+            currentExpression.setVariables(previousVariables);
+        }
+
         @Override
         public double evaluate(ValueCalculatorContext context) {
-            return 0;
+            return currentExpression == null
+                ? 0.0
+                : currentExpression.evaluate();
         }
 
         @Override

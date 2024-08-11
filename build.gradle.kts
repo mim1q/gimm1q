@@ -131,8 +131,8 @@ publishing {
         maven {
             url = uri("https://repo.repsy.io/mvn/mim1q/mods/")
             credentials {
-                username = properties["repsyUsername"] as String
-                password = properties["repsyPassword"] as String
+                username = properties["repsyUsername"] as? String
+                password = properties["repsyPassword"] as? String
             }
         }
     }

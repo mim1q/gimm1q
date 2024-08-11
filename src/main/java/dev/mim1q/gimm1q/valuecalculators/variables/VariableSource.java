@@ -19,7 +19,7 @@ public interface VariableSource {
 
     Codec<VariableSource> CONSTANT_CODEC = Codec.DOUBLE.xmap(Constant::new, it -> ((Constant) it).value());
 
-    Codec<VariableSource> EQUATION_CODEC = Codec.STRING.xmap(Equation::new, it -> ((Equation) it).equation());
+    Codec<VariableSource> EQUATION_CODEC = Codec.STRING.xmap(Equation::new, it -> ((Equation) it).expressionString);
 
     Codec<VariableSource> CONSTANT_OR_EQUATION_CODEC =
         Codec.either(CONSTANT_CODEC, EQUATION_CODEC).xmap(

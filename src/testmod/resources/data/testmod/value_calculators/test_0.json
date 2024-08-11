@@ -9,11 +9,9 @@
             "attribute": "generic.movement_speed"
         },
         "d": 1.0,
-        "e": 2
+        "e": "d + c"
     },
     "values": {
-        "d": "d",
-        "e": "e",
-        "de": "d + e"
+        "e": "e"
     }
 }

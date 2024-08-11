@@ -4,8 +4,10 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSource;
+import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;
 import net.objecthunter.exp4j.ExpressionBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,15 +31,25 @@ public record ValueCalculatorInternal(
     ).apply(instance, ValueCalculatorInternal::new));
 
     public Optional<Double> tryCalculateExpression(String name, ValueCalculatorContext context) {
+        var variableCache = new HashMap<String, Double>();
+        for (var variable : variables.entrySet()) {
+            var varName = variable.getKey();
+            var varType = variable.getValue();
+
+            if (varType instanceof VariableSourceTypes.Equation equationSource) {
+                equationSource.setupExpressionBuilder(variableCache);
+            }
+            variableCache.put(varName, varType.evaluate(context));
+        }
+
         return Optional
             .ofNullable(expressions.get(name))
             .map(it -> {
                 var expression = it.expression.variables(variables.keySet()).build();
 
                 for (var variable : variables.entrySet()) {
-                    var varName = variable.getKey();
-                    var varType = variable.getValue();
-                    expression = expression.setVariable(varName, varType.evaluate(context));
+                    var key = variable.getKey();
+                    expression = expression.setVariable(key, variableCache.get(key));
                 }
 
                 return expression.evaluate();
