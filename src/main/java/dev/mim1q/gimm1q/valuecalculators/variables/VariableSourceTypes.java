@@ -20,10 +20,10 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.StringIdentifiable;
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Stream;
 
 public final class VariableSourceTypes {
     public static final VariableSourceType<?> CONSTANT =
@@ -40,6 +40,9 @@ public final class VariableSourceTypes {
 
     public static final VariableSourceType<?> CONDITION =
         VariableSource.register(Gimm1q.id("condition"), Condition.CODEC);
+
+    public static final VariableSourceType<?> SWITCH =
+        VariableSource.register(Gimm1q.id("switch"), Switch.CODEC);
 
     public static void init() {
     }
@@ -188,7 +191,7 @@ public final class VariableSourceTypes {
         LootCondition condition,
         VariableSource ifTrue,
         VariableSource ifFalse
-    ) implements VariableSource {
+    ) implements VariableSourceWithDependencies {
         public static final Codec<Condition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             LootConditionSerialization.CODEC
                 .fieldOf("condition")
@@ -204,12 +207,48 @@ public final class VariableSourceTypes {
 
         @Override
         public double evaluate(ValueCalculatorContext context) {
+            var lootContext = createLootContext(context);
+            if (lootContext == null) return 0.0;
+
+            return condition.test(lootContext)
+                ? ifTrue.evaluate(context)
+                : ifFalse.evaluate(context);
+        }
+
+        @Override
+        public VariableSourceType<? extends VariableSource> getType() {
+            return CONDITION;
+        }
+
+        @Override
+        public List<ValueCalculatorParameter<?>> getRequiredParameters() {
+            var result = new ArrayList<ValueCalculatorParameter<?>>();
+            result.addAll(ifTrue.getRequiredParameters());
+            result.addAll(ifFalse.getRequiredParameters());
+
+            return result;
+        }
+
+        @Override
+        public String[] getPotentialVariableNames() {
+            var ifTrueDependencies = (ifTrue instanceof VariableSourceWithDependencies sourceWithDependencies)
+                ? sourceWithDependencies.getPotentialVariableNames() : new String[0];
+            var ifFalseDependencies = (ifFalse instanceof VariableSourceWithDependencies sourceWithDependencies)
+                ? sourceWithDependencies.getPotentialVariableNames() : new String[0];
+
+            return Stream
+                .concat(Arrays.stream(ifTrueDependencies), Arrays.stream(ifFalseDependencies))
+                .distinct()
+                .toArray(String[]::new);
+        }
+
+        static @Nullable LootContext createLootContext(ValueCalculatorContext context) {
             var holder = context.get(ValueCalculatorParameter.HOLDER);
             if (holder == null || holder.getWorld().isClient()) {
-                return 0.0;
+                return null;
             }
 
-            var lootContext = new LootContext.Builder(
+            return new LootContext.Builder(
                 new LootContextParameterSet(
                     (ServerWorld) holder.getWorld(),
                     Map.of(
@@ -220,15 +259,66 @@ public final class VariableSourceTypes {
                     (holder instanceof PlayerEntity player) ? player.getLuck() : 0f
                 )
             ).build(null);
+        }
+    }
 
-            return condition.test(lootContext)
-                ? ifTrue.evaluate(context)
-                : ifFalse.evaluate(context);
+    public record Switch(
+        List<Case> cases,
+        VariableSource fallback
+    ) implements VariableSourceWithDependencies {
+        public static final Codec<Switch> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            Codec
+                .list(Case.CODEC)
+                .fieldOf("cases")
+                .forGetter(Switch::cases),
+            VariableSource.CODEC
+                .fieldOf("fallback")
+                .forGetter(Switch::fallback)
+        ).apply(instance, Switch::new));
+
+        @Override
+        public double evaluate(ValueCalculatorContext context) {
+            var lootContext = Condition.createLootContext(context);
+            for (var currentCase : cases) {
+                if (currentCase.condition.test(lootContext)) {
+                    return currentCase.result.evaluate(context);
+                }
+            }
+
+            return fallback.evaluate(context);
         }
 
         @Override
         public VariableSourceType<? extends VariableSource> getType() {
-            return CONDITION;
+            return SWITCH;
+        }
+
+        @Override
+        public String[] getPotentialVariableNames() {
+            Stream<String> stream = Stream.of();
+            for (var currentCase : cases) {
+                if (currentCase.condition instanceof VariableSourceWithDependencies sourceWithDependencies) {
+                    stream = Stream.concat(stream, Arrays.stream(sourceWithDependencies.getPotentialVariableNames()));
+                }
+            }
+
+            return stream
+                .distinct()
+                .toArray(String[]::new);
+        }
+
+        private record Case(
+            LootCondition condition,
+            VariableSource result
+        ) {
+            public static final Codec<Case> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                LootConditionSerialization.CODEC
+                    .fieldOf("condition")
+                    .forGetter(Case::condition),
+                VariableSource.CODEC
+                    .fieldOf("result")
+                    .forGetter(Case::result)
+            ).apply(instance, Case::new));
         }
     }
 
