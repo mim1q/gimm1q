@@ -7,28 +7,30 @@ import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSource;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceWithDependencies;
+import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class ValueCalculatorInternal {
     private final Map<String, VariableSource> variables;
     private final HashMap<String, Double> variableCache = new HashMap<>();
-    private final Map<String, WrappedExpressionBuilder> expressions;
+    private final Map<String, WrappedExpression> expressions;
     private final HashSet<String> currentlyEvaluatedVariables = new HashSet<>();
 
     private ValueCalculatorInternal(
         Map<String, VariableSource> variables,
-        Map<String, WrappedExpressionBuilder> expressions
+        Map<String, WrappedExpression> expressions
     ) {
         this.variables = variables;
         this.expressions = expressions;
     }
 
-    private static final Codec<WrappedExpressionBuilder> EXPRESSION_BUILDER_CODEC =
+    private static final Codec<WrappedExpression> EXPRESSION_BUILDER_CODEC =
         Codec.STRING.xmap(
-            WrappedExpressionBuilder::of,
-            WrappedExpressionBuilder::string
+            WrappedExpression::of,
+            WrappedExpression::string
         );
 
     public static final Codec<ValueCalculatorInternal> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -89,8 +91,6 @@ public class ValueCalculatorInternal {
             tryCalculateVariableInternal(variable, context, true);
         }
         var result = Optional.of(expression.expression()
-            .variables(variableCache.keySet())
-            .build()
             .setVariables(variableCache)
             .evaluate()
         );
@@ -112,17 +112,30 @@ public class ValueCalculatorInternal {
         variableCache.clear();
     }
 
-    public record WrappedExpressionBuilder(
+    public record WrappedExpression(
         String string,
-        ExpressionBuilder expression,
+        Expression internalExpression,
         String[] potentialVariables
     ) {
-        public static WrappedExpressionBuilder of(String string) {
-            return new WrappedExpressionBuilder(
+        private static final Pattern regex = Pattern.compile("[a-z]+\\(?");
+
+        public static WrappedExpression of(String string) {
+            var potentialVariables = new HashSet<String>();
+            var matcher = regex.matcher(string);
+            while (matcher.find()) {
+                var group = matcher.group();
+                if (!group.endsWith("(")) potentialVariables.add(group);
+            }
+
+            return new WrappedExpression(
                 string,
-                new ExpressionBuilder(string),
-                string.split("\\b(?![a-z]*\\d+[a-z]*$)[^a-z]*\\b")
+                new ExpressionBuilder(string).variables(potentialVariables).build(),
+                potentialVariables.toArray(new String[0])
             );
+        }
+
+        public Expression expression() {
+            return internalExpression;
         }
     }
 }

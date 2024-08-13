@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.valuecalculators.internal.LootConditionSerialization;
-import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal.WrappedExpressionBuilder;
+import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal.WrappedExpression;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -69,21 +69,15 @@ public final class VariableSourceTypes {
     }
 
     public static class Equation implements VariableSourceWithDependencies {
-        private boolean setup = false;
-        private final WrappedExpressionBuilder expressionBuilder;
+        private final WrappedExpression expressionBuilder;
         private Expression currentExpression = null;
 
         Equation(String expression) {
-            this.expressionBuilder = WrappedExpressionBuilder.of(expression);
+            this.expressionBuilder = WrappedExpression.of(expression);
         }
 
         public void setupExpressionBuilder(Map<String, Double> previousVariables) {
-            if (!setup) {
-                setup = true;
-                expressionBuilder.expression().variables(previousVariables.keySet());
-            }
-
-            currentExpression = expressionBuilder.expression().build();
+            currentExpression = expressionBuilder.expression();
             currentExpression.setVariables(previousVariables);
         }
 
