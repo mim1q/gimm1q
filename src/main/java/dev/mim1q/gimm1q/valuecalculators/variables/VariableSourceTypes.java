@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.valuecalculators.internal.LootConditionSerialization;
+import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal.WrappedExpressionBuilder;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
 import net.minecraft.enchantment.EnchantmentHelper;
@@ -19,7 +20,6 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.StringIdentifiable;
 import net.objecthunter.exp4j.Expression;
-import net.objecthunter.exp4j.ExpressionBuilder;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -50,6 +50,9 @@ public final class VariableSourceTypes {
     public record Constant(
         double value
     ) implements VariableSource {
+        public static final Constant ZERO = new Constant(0.0);
+        public static final Constant ONE = new Constant(1.0);
+
         public static final Codec<Constant> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.DOUBLE.fieldOf("value").forGetter(Constant::value)
         ).apply(instance, Constant::new));
@@ -66,36 +69,27 @@ public final class VariableSourceTypes {
     }
 
     public static class Equation implements VariableSourceWithDependencies {
-        public final String expressionString;
         private boolean setup = false;
-        private final ExpressionBuilder expressionBuilder;
+        private final WrappedExpressionBuilder expressionBuilder;
         private Expression currentExpression = null;
-        private final String[] potentialVariables;
 
         Equation(String expression) {
-            this.expressionString = expression;
-            this.expressionBuilder = new ExpressionBuilder(expressionString);
-            // Splits the expression into potential variable names. This will include function names,
-            // but it will check for names in the variable set anyway, so any non-variables will be ignored.
-
-            // This is needed for the expression to be sorted properly, so all its dependencies are evaluated before
-            // itself
-            potentialVariables = expressionString.split("\\b(?![a-z]*\\d+[a-z]*$)[^a-z]*\\b");
+            this.expressionBuilder = WrappedExpressionBuilder.of(expression);
         }
 
         public void setupExpressionBuilder(Map<String, Double> previousVariables) {
             if (!setup) {
                 setup = true;
-                expressionBuilder.variables(previousVariables.keySet());
+                expressionBuilder.expression().variables(previousVariables.keySet());
             }
 
-            currentExpression = expressionBuilder.build();
+            currentExpression = expressionBuilder.expression().build();
             currentExpression.setVariables(previousVariables);
         }
 
         @Override
         public String[] getPotentialVariableNames() {
-            return potentialVariables;
+            return expressionBuilder.potentialVariables();
         }
 
         @Override
@@ -197,10 +191,10 @@ public final class VariableSourceTypes {
                 .fieldOf("condition")
                 .forGetter(Condition::condition),
             VariableSource.CODEC
-                .optionalFieldOf("if_true", new VariableSourceTypes.Constant(1.0))
+                .optionalFieldOf("if_true", Constant.ONE)
                 .forGetter(Condition::ifTrue),
             VariableSource.CODEC
-                .optionalFieldOf("if_false", new VariableSourceTypes.Constant(0.0))
+                .optionalFieldOf("if_false", Constant.ZERO)
                 .forGetter(Condition::ifFalse)
         ).apply(instance, Condition::new));
 
