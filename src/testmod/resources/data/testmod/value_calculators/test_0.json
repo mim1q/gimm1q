@@ -1,14 +1,21 @@
 {
-  "variables": {
-    "rng": {
-      "type": "gimm1q:condition",
-      "condition": {
-        "condition": "minecraft:random_chance",
-        "chance": 0.5
-      }
+    "variables": {
+        "rng": {
+            "type": "gimm1q:condition",
+            "condition": {
+                "condition": "minecraft:random_chance",
+                "chance": 0.5
+            },
+            "if_true": 0.5,
+            "if_false": 0.0
+        },
+        "power": {
+            "type": "gimm1q:attribute",
+            "attribute": "generic.attack_damage"
+        }
+    },
+    "values": {
+        "some_value": "2 * power + rng",
+        "some_other_value": "2.0"
     }
-  },
-  "values": {
-    "e": "rng"
-  }
 }

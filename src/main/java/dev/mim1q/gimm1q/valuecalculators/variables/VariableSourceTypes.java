@@ -87,6 +87,10 @@ public final class VariableSourceTypes {
             currentExpression.setVariables(previousVariables);
         }
 
+        public String getExpressionString() {
+            return expressionBuilder.string();
+        }
+
         @Override
         public String[] getPotentialVariableNames() {
             return expressionBuilder.potentialVariables();

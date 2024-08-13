@@ -12,9 +12,7 @@ import net.minecraft.util.Identifier;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ValueCalculatorResourceReloader implements SimpleSynchronousResourceReloadListener {
@@ -24,7 +22,7 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
     public static final ValueCalculatorResourceReloader INSTANCE = new ValueCalculatorResourceReloader();
 
     private static final Identifier ID = Gimm1q.id("value_calculators");
-    private static final ConcurrentHashMap<Identifier, List<ValueCalculatorInternal>> map = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Identifier, List<ValueCalculatorInternal>> map = new ConcurrentHashMap<>();
 
     @Override
     public Identifier getFabricId() {
@@ -62,7 +60,12 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         });
     }
 
-    public Optional<Double> calculate(Identifier id, String name, ValueCalculatorContext context) {
+    public Optional<Double> calculateExpressionOrVariable(
+        Identifier id,
+        String name,
+        ValueCalculatorContext context,
+        boolean variable
+    ) {
         var list = map.get(id);
         if (list == null) {
             Gimm1q.LOGGER.error("Value Calculator file not found: {}. Defaulting to 0.0", id);
@@ -70,13 +73,45 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         }
 
         for (var it : list) {
-            var exp = it.tryCalculateExpression(name, context);
+            var exp = variable
+                ? it.tryCalculateVariable(name, context)
+                : it.tryCalculateExpression(name, context);
             if (exp.isPresent()) {
                 return exp;
             }
         }
 
-        Gimm1q.LOGGER.error("Value Calculator expression not found: {}.{}. Defaulting to 0.0", id, name);
+        Gimm1q.LOGGER.error("Value Calculator expression or variable not found: {}.{}. Defaulting to 0.0", id, name);
         return Optional.empty();
+    }
+
+    public Optional<Double> calculateExpression(Identifier id, String name, ValueCalculatorContext context) {
+        return calculateExpressionOrVariable(id, name, context, false);
+    }
+
+    public Optional<Double> calculateVariable(Identifier id, String name, ValueCalculatorContext context) {
+        return calculateExpressionOrVariable(id, name, context, true);
+    }
+
+    public static Set<Identifier> getAllIds() {
+        return INSTANCE.map.keySet();
+    }
+
+    public static Optional<Set<String>> getExpressionOrVariableNames(Identifier id, boolean variables) {
+        var list = INSTANCE.map.get(id);
+        if (list == null) {
+            return Optional.empty();
+        }
+        return Optional.of(list.stream().reduce(
+            new HashSet<>(),
+            (acc, it) -> {
+                acc.addAll(variables ? it.getVariableNames() : it.getExpressionNames());
+                return acc;
+            },
+            (a, b) -> {
+                a.addAll(b);
+                return a;
+            }
+        ));
     }
 }

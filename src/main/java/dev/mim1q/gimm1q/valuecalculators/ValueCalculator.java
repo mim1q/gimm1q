@@ -9,7 +9,7 @@ public record ValueCalculator(
     String name
 ) {
     double calculate(ValueCalculatorContext context) {
-        return ValueCalculatorResourceReloader.INSTANCE.calculate(id, name, context).orElse(0.0);
+        return ValueCalculatorResourceReloader.INSTANCE.calculateExpression(id, name, context).orElse(0.0);
     }
 
     double calculate() {

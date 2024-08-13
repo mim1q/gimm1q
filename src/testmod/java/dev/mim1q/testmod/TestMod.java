@@ -1,6 +1,7 @@
 package dev.mim1q.testmod;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
+import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.effect.ExtendedStatusEffect;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeModifiers;
 import dev.mim1q.testmod.block.EasingTesterBlock;
@@ -68,6 +69,7 @@ public class TestMod implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Hello Fabric world!");
+        Gimm1q.debugMessages = true;
 
         CommandRegistrationCallback.EVENT.register((listener, registry, environment) -> {
             listener.register(literal("modify_screenshake")
