@@ -25,22 +25,128 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
+/**
+ * This class contains some basic types of {@link VariableSource}s with examples on how to implement them
+ */
 public final class VariableSourceTypes {
+    /**
+     * Always returns the same provided value
+     * <pre>{@code
+     *     "variables": {
+     *         "my_var": 10.0
+     *     }
+     * }</pre>
+     */
     public static final VariableSourceType<?> CONSTANT =
         VariableSource.register(Gimm1q.id("constant"), Constant.CODEC);
 
+    /**
+     * Returns a value based on an equation. It may use other variables, but you must make sure that there are no
+     * cyclic dependencies between different equations
+     *
+     * <pre>{@code
+     *     "variables": {
+     *         "a": 10.0,
+     *         "b": 20.0,
+     *         "my_var": "a + b"
+     *     }
+     * }</pre>
+     */
     public static final VariableSourceType<?> EQUATION =
         VariableSource.register(Gimm1q.id("equation"), Equation.CODEC);
 
+    /**
+     * Returns a value based on an entity's attribute value
+     *
+     * <pre>{@code
+     *     "variables": {
+     *         "my_var": {
+     *             "type": "gimm1q:attribute",
+     *             "attribute": "generic.attack_damage",
+     *             "fallback": 10.0
+     *         }
+     *     }
+     * }</pre>
+     */
     public static final VariableSourceType<?> ATTRIBUTE =
         VariableSource.register(Gimm1q.id("attribute"), Attribute.CODEC);
 
+    /**
+     * Returns the level of the provided enchantment (0 if the enchantment is not present).
+     * The value is based on an entity's held item or the context item stack (if provided)
+     *
+     * <pre>{@code
+     *     "variables": {
+     *         "my_var": {
+     *             "type": "gimm1q:enchantment",
+     *             "enchantment": "minecraft:knockback",
+     *         }
+     *     }
+     * }</pre>
+     */
     public static final VariableSourceType<?> ENCHANTMENT =
         VariableSource.register(Gimm1q.id("enchantment"), Enchantment.CODEC);
 
+    /**
+     * Returns values based on a condition. The provided condition syntax is a {@link LootCondition}.
+     * A good resource for creating these is <a href="https://misode.github.io/loot-table/">Misode's loot table
+     * generator</a>, when adding a new condition to a Loot Table.
+     *
+     * <p>
+     * Both if_true and if_false can be any other Variable Source type. In this case, they're constants
+     * </p>
+     *
+     * <pre>{@code
+     *     "variables": {
+     *         "my_var": {
+     *             "type": "gimm1q:condition",
+     *             "condition": {
+     *                 "condition": "minecraft:random_chance",
+     *                 "chance": 0.5
+     *             },
+     *             "if_true": 10.0,
+     *             "if_false": 5.0
+     *         }
+     *     }
+     * }</pre>
+     */
     public static final VariableSourceType<?> CONDITION =
         VariableSource.register(Gimm1q.id("condition"), Condition.CODEC);
 
+    /**
+     * Similar to {@link #CONDITION}, but can have multiple values that work similar to a switch statement.
+     * The first condition that resolves to true will have its value returned. If no condition matches, it will use
+     * its provided fallback value.
+     *
+     * <p>
+     * Both the results and the fallback can be any other Variable Source type. In this case, they're constants.
+     * </p>
+     *
+     * <pre>{@code
+     *     "variables": {
+     *         "my_var": {
+     *             "type": "gimm1q:switch",
+     *             "cases": [
+     *                 {
+     *                     "condition": {
+     *                         "condition": "minecraft:weather_check",
+     *                         "raining": true
+     *                     },
+     *                     "result": 10.0
+     *                 },
+     *                 {
+     *                     "condition": {
+     *                         "condition": "minecraft:random_chance",
+     *                         "chance": 0.5
+     *                     },
+     *                     "result": 5.0
+     *                 }
+     *             ],
+     *             "fallback": 0.0
+     *         }
+     *     }
+     * }</pre>
+     */
     public static final VariableSourceType<?> SWITCH =
         VariableSource.register(Gimm1q.id("switch"), Switch.CODEC);
 

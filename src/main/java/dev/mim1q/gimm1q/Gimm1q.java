@@ -18,6 +18,11 @@ import org.jetbrains.annotations.ApiStatus;
 public class Gimm1q implements ModInitializer {
     public static final String ID = "gimm1q";
     public static final Logger LOGGER = LogManager.getLogger(ID);
+
+    /**
+     * Only use for the testmod. Don't enable in production because there's lots of debug messages
+     */
+    @ApiStatus.Internal
     public static boolean debugMessages = false;
 
     @Override

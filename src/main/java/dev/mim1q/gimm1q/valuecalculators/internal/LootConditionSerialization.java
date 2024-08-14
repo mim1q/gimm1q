@@ -8,7 +8,9 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.loot.LootDataType;
 import net.minecraft.loot.condition.LootCondition;
+import org.jetbrains.annotations.ApiStatus;
 
+@ApiStatus.Internal
 public final class LootConditionSerialization {
     private LootConditionSerialization() {
     }

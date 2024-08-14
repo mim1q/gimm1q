@@ -4,6 +4,13 @@ import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import net.minecraft.util.Identifier;
 
+/**
+ * A convenient way to retrieve a value of an expression defined in the Value Calculator data.
+ *
+ * @param id       the identifier of the value calculator file
+ * @param name     the name of the value inside the <code>values</code> map in the json file
+ * @param fallback the fallback value if the expression is not found
+ */
 public record ValueCalculator(
     Identifier id,
     String name,

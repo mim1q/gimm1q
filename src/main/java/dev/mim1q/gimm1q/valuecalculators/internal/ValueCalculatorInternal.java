@@ -9,10 +9,12 @@ import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceWithDependencies;
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.*;
 import java.util.regex.Pattern;
 
+@ApiStatus.Internal
 public class ValueCalculatorInternal {
     private final Map<String, VariableSource> variables;
     private final HashMap<String, Double> variableCache = new HashMap<>();
