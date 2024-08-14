@@ -16,6 +16,6 @@
     },
     "values": {
         "some_value": "2 * power + rng",
-        "some_other_value": "2.0"
+        "some_other_value": "8.0"
     }
 }

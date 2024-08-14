@@ -86,6 +86,7 @@ public class ValueCalculatorInternal {
     public Optional<Double> tryCalculateExpression(String name, ValueCalculatorContext context) {
         clearVariableCache();
         var expression = expressions.get(name);
+        if (expression == null) return Optional.empty();
         var startTime = System.nanoTime();
         for (var variable : expression.potentialVariables()) {
             tryCalculateVariableInternal(variable, context, true);
