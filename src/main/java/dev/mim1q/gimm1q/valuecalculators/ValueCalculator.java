@@ -6,17 +6,22 @@ import net.minecraft.util.Identifier;
 
 public record ValueCalculator(
     Identifier id,
-    String name
+    String name,
+    Double fallback
 ) {
-    double calculate(ValueCalculatorContext context) {
-        return ValueCalculatorResourceReloader.INSTANCE.calculateExpression(id, name, context).orElse(0.0);
+    public double calculate(ValueCalculatorContext context) {
+        return ValueCalculatorResourceReloader.INSTANCE.calculateExpression(id, name, context).orElse(fallback);
     }
 
-    double calculate() {
+    public double calculate() {
         return calculate(ValueCalculatorContext.create());
     }
 
     public static ValueCalculator of(Identifier id, String name) {
-        return new ValueCalculator(id, name);
+        return of(id, name, 0.0);
+    }
+
+    public static ValueCalculator of(Identifier id, String name, double fallback) {
+        return new ValueCalculator(id, name, fallback);
     }
 }

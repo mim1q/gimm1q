@@ -4,6 +4,9 @@ import com.mojang.brigadier.arguments.FloatArgumentType;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.effect.ExtendedStatusEffect;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeModifiers;
+import dev.mim1q.gimm1q.valuecalculators.ValueCalculator;
+import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
+import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
 import dev.mim1q.testmod.block.EasingTesterBlock;
 import dev.mim1q.testmod.block.EasingTesterBlockEntity;
 import dev.mim1q.testmod.block.ThumperBlock;
@@ -18,12 +21,18 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.TypedActionResult;
+import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -43,6 +52,28 @@ public class TestMod implements ModInitializer {
         BlockEntityType.Builder.create(EasingTesterBlockEntity::new, EASING_TESTER).build(null)
     );
     public static final OverlayTesterItem OVERLAY_TESTER = registerItem("overlay_tester", new OverlayTesterItem(new FabricItemSettings()));
+
+    public static final ValueCalculator TEST_VALUE_CALCULATOR = ValueCalculator.of(id("test_0"), "stick");
+
+    public static final Item VALUE_CALCULATOR_TESTER = registerItem("value_calculator_tester", new Item(new FabricItemSettings()) {
+        @Override
+        public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+            var context =ValueCalculatorContext.create()
+                .with(ValueCalculatorParameter.HOLDER, user)
+                .with(ValueCalculatorParameter.TARGET, user);
+            if (user.isSneaking()) {
+                if (world.isClient) {
+                    user.sendMessage(Text.literal("Value (client): " + TEST_VALUE_CALCULATOR.calculate(context)));
+                }
+            } else {
+                if (!world.isClient) {
+                    user.sendMessage(Text.literal("Value (server): " + TEST_VALUE_CALCULATOR.calculate(context)));
+                }
+            }
+
+            return super.use(world, user, hand);
+        }
+    });
 
     private static class PossiblyIncurableStatusEffect extends StatusEffect implements ExtendedStatusEffect {
         private final boolean curable;
@@ -88,6 +119,7 @@ public class TestMod implements ModInitializer {
                 items.add(HIGHLIGHT_STICK);
                 items.add(THUMPER_BLOCK);
                 items.add(EASING_TESTER);
+                items.add(VALUE_CALCULATOR_TESTER);
             }
         });
     }

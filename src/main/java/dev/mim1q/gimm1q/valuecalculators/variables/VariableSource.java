@@ -30,7 +30,7 @@ public interface VariableSource {
     Codec<VariableSource> CODEC =
         Codec.either(CONSTANT_OR_EQUATION_CODEC, TYPED_CODEC).xmap(
             either -> either.map(it -> it, it -> it),
-            Either::left
+            Either::right
         );
 
     @ApiStatus.OverrideOnly

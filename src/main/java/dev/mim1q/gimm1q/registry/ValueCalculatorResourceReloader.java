@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import dev.mim1q.gimm1q.Gimm1q;
+import dev.mim1q.gimm1q.network.s2c.ValueCalculatorSyncS2CPacket;
 import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
@@ -42,6 +43,11 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         var idsToStrings = loadFromDataPacks(manager);
         saveTemplatesToConfigFolder(idsToStrings);
         loadFromConfigFolder(idsToStrings.keySet());
+    }
+
+    public void replaceWith(Map<Identifier, List<ValueCalculatorInternal>> map) {
+        this.map.clear();
+        this.map.putAll(map);
     }
 
     private Map<Identifier, String> loadFromDataPacks(ResourceManager manager) {
@@ -162,6 +168,10 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
 
     public static Set<Identifier> getAllIds() {
         return INSTANCE.map.keySet();
+    }
+
+    public ValueCalculatorSyncS2CPacket createPacket() {
+        return new ValueCalculatorSyncS2CPacket(map);
     }
 
     public static Optional<Set<String>> getExpressionOrVariableNames(Identifier id, boolean variables) {

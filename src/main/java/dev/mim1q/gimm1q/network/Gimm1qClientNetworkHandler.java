@@ -1,5 +1,7 @@
 package dev.mim1q.gimm1q.network;
 
+import dev.mim1q.gimm1q.network.s2c.ValueCalculatorSyncS2CPacket;
+import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeAccessor;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeModifiers;
 import net.fabricmc.api.EnvType;
@@ -22,6 +24,13 @@ public class Gimm1qClientNetworkHandler {
                 shakeIntensity *= ScreenShakeModifiers.getModifier(modifierName);
             }
             ((ScreenShakeAccessor) player).shakeCamera(shakeIntensity, shakeDuration);
+        });
+
+        ClientPlayNetworking.registerGlobalReceiver(Gimm1qPacketIds.SYNC_VALUE_CALCULATORS_S2C, (client, handler, buf, responseSender) -> {
+            var data = ValueCalculatorSyncS2CPacket.readMap(buf);
+            client.executeTask(() -> {
+                ValueCalculatorResourceReloader.INSTANCE.replaceWith(data);
+            });
         });
     }
 }
