@@ -19,6 +19,8 @@
     "values": {
         "some_value": "2 * power + rng",
         "some_other_value": "8.0",
-        "stick": "16.0 + power"
+        "stick": "16.0 + power",
+        "double_value": 2.0,
+        "string_value": "3.0"
     }
 }

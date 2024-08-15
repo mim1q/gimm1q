@@ -1,5 +1,6 @@
 package dev.mim1q.gimm1q.valuecalculators.internal;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
@@ -12,6 +13,7 @@ import net.objecthunter.exp4j.ExpressionBuilder;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 @ApiStatus.Internal
@@ -28,10 +30,22 @@ public class ValueCalculatorInternal {
         this.expressions = expressions;
     }
 
-    private static final Codec<WrappedExpression> EXPRESSION_BUILDER_CODEC =
+    private static final Codec<WrappedExpression> EXPRESSION_BUILDER_STRING_CODEC =
         Codec.STRING.xmap(
             WrappedExpression::of,
             WrappedExpression::string
+        );
+
+    private static final Codec<WrappedExpression> EXPRESSION_BUILDER_DOUBLE_CODEC =
+        Codec.DOUBLE.xmap(
+            it -> WrappedExpression.of(String.valueOf(it)),
+            it -> Double.valueOf(it.string)
+        );
+
+    private static final Codec<WrappedExpression> EXPRESSION_BUILDER_CODEC =
+        Codec.either(EXPRESSION_BUILDER_STRING_CODEC, EXPRESSION_BUILDER_DOUBLE_CODEC).xmap(
+            it -> it.map(Function.identity(), Function.identity()),
+            Either::left
         );
 
     public static final Codec<ValueCalculatorInternal> CODEC = RecordCodecBuilder.create(instance -> instance.group(
