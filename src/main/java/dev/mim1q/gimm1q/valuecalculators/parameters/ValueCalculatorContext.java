@@ -61,6 +61,12 @@ public final class ValueCalculatorContext {
         return this;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj
+            || obj instanceof ValueCalculatorContext && parameters.equals(((ValueCalculatorContext) obj).parameters);
+    }
+
     /**
      * Create an empty context
      *

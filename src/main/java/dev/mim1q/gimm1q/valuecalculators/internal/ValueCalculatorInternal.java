@@ -13,14 +13,15 @@ import net.objecthunter.exp4j.ExpressionBuilder;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
 @ApiStatus.Internal
 public class ValueCalculatorInternal {
     private final Map<String, VariableSource> variables;
-    private final HashMap<String, Double> variableCache = new HashMap<>();
     private final Map<String, WrappedExpression> expressions;
+    private final ConcurrentHashMap<ValueCalculatorContext, HashMap<String, Double>> variableCache = new ConcurrentHashMap<>();
 
     private ValueCalculatorInternal(
         Map<String, VariableSource> variables,
@@ -70,7 +71,8 @@ public class ValueCalculatorInternal {
             Gimm1q.LOGGER.error("Value Calculator dependency cycle detected in variable: {}", name);
             return Optional.empty();
         }
-        if (variableCache.containsKey(name)) return Optional.of(variableCache.get(name));
+        var cached = variableCache.getOrDefault(context, new HashMap<>());
+        if (cached.containsKey(name)) return Optional.of(cached.get(name));
 
         var source = variables.get(name);
         if (source == null) return Optional.empty();
@@ -83,38 +85,42 @@ public class ValueCalculatorInternal {
         }
 
         if (source instanceof VariableSourceTypes.Equation equationSource) {
-            equationSource.setupExpressionBuilder(variableCache);
+            equationSource.setupExpressionBuilder(variableCache.get(context));
         }
 
-        variableCache.put(name, source.evaluate(context));
-        return Optional.ofNullable(variableCache.get(name));
+        cached.put(name, source.evaluate(context));
+        return Optional.ofNullable(cached.get(name));
     }
 
     public Optional<Double> tryCalculateVariable(String name, ValueCalculatorContext context) {
-        clearVariableCache();
+        variableCache.put(context, new HashMap<>());
         var startTime = System.nanoTime();
         var result = tryCalculateVariableInternal(name, context, new HashSet<>());
         var endTime = System.nanoTime();
         if (Gimm1q.debugMessages)
             Gimm1q.LOGGER.info("Value Calculator for variable: {} took {}ms", name, (endTime - startTime) / 1_000_000f);
+        clearVariableCache(context);
         return result;
     }
 
     public Optional<Double> tryCalculateExpression(String name, ValueCalculatorContext context) {
-        clearVariableCache();
         var expression = expressions.get(name);
         if (expression == null) return Optional.empty();
+
+        variableCache.put(context, new HashMap<>());
         var startTime = System.nanoTime();
         for (var variable : expression.potentialVariables()) {
             tryCalculateVariableInternal(variable, context, new HashSet<>());
         }
         var result = Optional.of(expression.expression()
-            .setVariables(variableCache)
+            .setVariables(variableCache.getOrDefault(context, new HashMap<>()))
             .evaluate()
         );
         var endTime = System.nanoTime();
         if (Gimm1q.debugMessages)
             Gimm1q.LOGGER.info("Value Calculator for expression: {} took {}ms", name, (endTime - startTime) / 1_000_000f);
+
+        clearVariableCache(context);
         return result;
     }
 
@@ -126,8 +132,8 @@ public class ValueCalculatorInternal {
         return expressions.keySet();
     }
 
-    public void clearVariableCache() {
-        variableCache.clear();
+    public void clearVariableCache(ValueCalculatorContext context) {
+        variableCache.remove(context);
     }
 
     public record WrappedExpression(
