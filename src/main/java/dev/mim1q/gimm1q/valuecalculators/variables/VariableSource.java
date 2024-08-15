@@ -43,7 +43,12 @@ public interface VariableSource {
     Codec<VariableSource> CONSTANT_OR_EQUATION_CODEC =
         Codec.either(CONSTANT_CODEC, EQUATION_CODEC).xmap(
             either -> either.map(it -> it, it -> it),
-            Either::left
+            it -> {
+                if (it instanceof Constant) {
+                    return Either.left(it);
+                }
+                return Either.right(it);
+            }
         );
 
     /**
@@ -54,7 +59,12 @@ public interface VariableSource {
     Codec<VariableSource> CODEC =
         Codec.either(CONSTANT_OR_EQUATION_CODEC, TYPED_CODEC).xmap(
             either -> either.map(it -> it, it -> it),
-            Either::right
+            it -> {
+                if (it instanceof Constant || it instanceof Equation) {
+                    return Either.left(it);
+                }
+                return Either.right(it);
+            }
         );
 
     /**

@@ -12,7 +12,9 @@
         "power": {
             "type": "gimm1q:attribute",
             "attribute": "generic.attack_damage"
-        }
+        },
+        "b": "a",
+        "a": "b"
     },
     "values": {
         "some_value": "2 * power + rng",
