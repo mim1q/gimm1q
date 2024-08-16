@@ -3,9 +3,9 @@ package dev.mim1q.gimm1q.mixin.client.tooltip;
 import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry;
 import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry.TooltipHelper;
 import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry.TooltipResolverContext;
-import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistryImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.util.InputUtil;
@@ -13,6 +13,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,7 +51,7 @@ public abstract class ItemStackTooltipMixin {
         if (player == null) return;
         var thisItemStack = (ItemStack) (Object) this;
 
-        var tooltipResolver = TooltipResolverRegistryImpl.resolvers.get(this.getItem());
+        var tooltipResolver = TooltipResolverRegistry.getInstance().getResolver(this.getItem());
         if (tooltipResolver == null) return;
 
         var currentTime = System.currentTimeMillis();
@@ -98,7 +99,12 @@ public abstract class ItemStackTooltipMixin {
             newTooltip.add(pair.getLeft());
         }
         if (!altPressed && altTooltip) {
-            newTooltip.add(Text.translatable("tooltip.gimm1q.alt_tooltip"));
+            newTooltip.add(
+                Text.translatable(
+                    "tooltip.gimm1q.alt_tooltip",
+                    Text.translatable("key.keyboard.left.alt").getString()
+                ).formatted(Formatting.DARK_GRAY)
+            );
         }
         tooltip.set(newTooltip);
     }
@@ -109,18 +115,18 @@ public abstract class ItemStackTooltipMixin {
             value = "INVOKE",
             target = "Lnet/minecraft/item/ItemStack;hasNbt()Z",
             ordinal = 0
-        ),
-        cancellable = true
+        )
     )
     private void gimm1q$onGetTooltip2(
         @Nullable PlayerEntity player,
         TooltipContext context,
         CallbackInfoReturnable<List<Text>> cir,
-        @Local ArrayList<Text> list,
+        @Local(ordinal = 0) List<Text> list,
         @Share("tooltip") LocalRef<List<Text>> tooltip
     ) {
         var newTooltip = tooltip.get();
-
+        if (newTooltip == null || newTooltip.isEmpty()) return;
+        list.addAll(tooltip.get());
     }
 
     @Inject(

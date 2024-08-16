@@ -125,7 +125,8 @@ public class TestMod implements ModInitializer {
             helper
                 .add(Text.literal("Test tooltip line 1: " + context.item().getName().getString()))
                 .addHidden(Text.literal("Hidden line"))
-                .add(Text.literal("Test tooltip line 2"));
+                .add(Text.literal("Test tooltip line 2: " + context.player().age))
+                .hideSections(ItemStack.TooltipSection.ENCHANTMENTS);
         }, Items.STICK, Items.BONE, Items.WOODEN_SWORD);
     }
 
