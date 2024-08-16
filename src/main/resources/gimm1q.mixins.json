@@ -11,6 +11,7 @@
         "client.item.ItemRendererMixin",
         "client.model.CuboidOverlayRendererMixin",
         "client.model.EntityModelMixin",
-        "client.model.feature.FeatureRendererMixin"
+        "client.model.feature.FeatureRendererMixin",
+        "client.tooltip.ItemStackTooltipMixin"
     ]
 }

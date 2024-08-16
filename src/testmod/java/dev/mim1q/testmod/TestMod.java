@@ -2,6 +2,7 @@ package dev.mim1q.testmod;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import dev.mim1q.gimm1q.Gimm1q;
+import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry;
 import dev.mim1q.gimm1q.effect.ExtendedStatusEffect;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeModifiers;
 import dev.mim1q.gimm1q.valuecalculators.ValueCalculator;
@@ -22,10 +23,7 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroups;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.text.Text;
@@ -58,7 +56,7 @@ public class TestMod implements ModInitializer {
     public static final Item VALUE_CALCULATOR_TESTER = registerItem("value_calculator_tester", new Item(new FabricItemSettings()) {
         @Override
         public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-            var context =ValueCalculatorContext.create()
+            var context = ValueCalculatorContext.create()
                 .with(ValueCalculatorParameter.HOLDER, user)
                 .with(ValueCalculatorParameter.TARGET, user);
             if (user.isSneaking()) {
@@ -122,6 +120,13 @@ public class TestMod implements ModInitializer {
                 items.add(VALUE_CALCULATOR_TESTER);
             }
         });
+
+        TooltipResolverRegistry.getInstance().register((context, helper) -> {
+            helper
+                .add(Text.literal("Test tooltip line 1: " + context.item().getName().getString()))
+                .addHidden(Text.literal("Hidden line"))
+                .add(Text.literal("Test tooltip line 2"));
+        }, Items.STICK, Items.BONE, Items.WOODEN_SWORD);
     }
 
     public static Identifier id(String path) {
