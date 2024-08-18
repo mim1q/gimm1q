@@ -12,6 +12,7 @@ import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
@@ -34,6 +35,8 @@ public abstract class ItemStackTooltipMixin {
     private long gimm1q$lastTooltipTime = 0;
     @Unique
     private static List<ItemStack.TooltipSection> gimm1q$hiddenTooltipSections = List.of();
+    @Unique
+    private static Style gimm1q$defaultStyle = Style.EMPTY;
 
     @Shadow
     public abstract Item getItem();
@@ -52,15 +55,20 @@ public abstract class ItemStackTooltipMixin {
         var thisItemStack = (ItemStack) (Object) this;
 
         var tooltipResolver = TooltipResolverRegistry.getInstance().getResolver(this.getItem());
-        if (tooltipResolver == null) return;
+        if (tooltipResolver == null) {
+            gimm1q$hiddenTooltipSections = List.of();
+            return;
+        }
 
         var currentTime = System.currentTimeMillis();
-        List<Pair<Text, Boolean>> currentTooltip;
+        final int[] maxLineWidth = {1024};
+
+        final List<Pair<Text, Boolean>> currentTooltip;
+
         if (currentTime - gimm1q$lastTooltipTime <= 60) {
             currentTooltip = gimm1q$tooltipsToAdd;
         } else {
             currentTooltip = new ArrayList<>();
-            gimm1q$tooltipsToAdd = currentTooltip;
             System.out.println("resolving");
 
             gimm1q$hiddenTooltipSections = new ArrayList<>();
@@ -72,8 +80,8 @@ public abstract class ItemStackTooltipMixin {
                 ),
                 new TooltipHelper() {
                     @Override
-                    public TooltipHelper add(Text text, boolean hidden) {
-                        currentTooltip.add(new Pair<>(text, hidden));
+                    public TooltipHelper addLine(Text text, boolean extra) {
+                        currentTooltip.add(new Pair<>(text, extra));
                         return this;
                     }
 
@@ -82,8 +90,32 @@ public abstract class ItemStackTooltipMixin {
                         gimm1q$hiddenTooltipSections.addAll(List.of(sections));
                         return this;
                     }
+
+                    @Override
+                    public TooltipHelper defaultStyle(Style style) {
+                        gimm1q$defaultStyle = style;
+                        return this;
+                    }
+
+                    @Override
+                    public TooltipHelper maxLineWidth(int width) {
+                        maxLineWidth[0] = width;
+                        return this;
+                    }
                 }
             );
+
+            var newCurrentTooltip = currentTooltip.stream().<Pair<Text, Boolean>>mapMulti((it, consumer) -> {
+                var result = TooltipHelper.splitTextIfExceeds(it.getLeft(), maxLineWidth[0]);
+                for (Text text : result) {
+                    consumer.accept(new Pair<>(text, it.getRight()));
+                }
+            }).toList();
+
+            currentTooltip.clear();
+            currentTooltip.addAll(newCurrentTooltip);
+
+            gimm1q$tooltipsToAdd = currentTooltip;
         }
 
         gimm1q$lastTooltipTime = currentTime;
@@ -96,7 +128,11 @@ public abstract class ItemStackTooltipMixin {
                 altTooltip = true;
                 continue;
             }
-            newTooltip.add(pair.getLeft());
+            var text = pair.getLeft();
+            if (text.getStyle().isEmpty()) {
+                text = text.copy().setStyle(gimm1q$defaultStyle);
+            }
+            newTooltip.add(text);
         }
         if (!altPressed && altTooltip) {
             newTooltip.add(

@@ -26,7 +26,9 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
@@ -123,10 +125,15 @@ public class TestMod implements ModInitializer {
 
         TooltipResolverRegistry.getInstance().register((context, helper) -> {
             helper
-                .add(Text.literal("Test tooltip line 1: " + context.item().getName().getString()))
-                .addHidden(Text.literal("Hidden line"))
-                .add(Text.literal("Test tooltip line 2: " + context.player().age))
-                .hideSections(ItemStack.TooltipSection.ENCHANTMENTS);
+                .addLine(Text.literal("Test tooltip line 1: " + context.item().getName().getString()))
+                .addExtraLine(Text.literal("Hidden line"))
+                .addLine(Text.literal("Test tooltip line 2: " + context.player().age))
+                .addLine(Text.literal("This is a line that is supposed to be very long to exceed the imposed line " +
+                    "width limit. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor " +
+                    "incididunt ut labore et dolore magna aliqua."))
+                .hideSections(ItemStack.TooltipSection.ENCHANTMENTS)
+                .defaultStyle(Style.EMPTY.withFormatting(Formatting.GRAY))
+                .maxLineWidth(48);
         }, Items.STICK, Items.BONE, Items.WOODEN_SWORD);
     }
 
