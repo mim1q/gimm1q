@@ -1,12 +1,16 @@
 {
     "variables": {
+        "a": 10,
         "power": {
-            "type": "gimm1q:attribute",
-            "attribute": "generic.attack_damage"
+            "type": "gimm1q:condition",
+            "condition": "a > 5",
+            "if_true": "a",
+            "if_false": "5"
         }
     },
 
     "values": {
-        "my_value": "2 * power"
+        "my_value": "power",
+        "const_value": 500
     }
 }

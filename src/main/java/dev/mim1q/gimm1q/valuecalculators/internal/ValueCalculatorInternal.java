@@ -6,19 +6,25 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSource;
-import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceWithDependencies;
+import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceWithEquations;
+import net.minecraft.util.math.random.Random;
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
+import net.objecthunter.exp4j.function.Function;
+import net.objecthunter.exp4j.operator.Operator;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 @ApiStatus.Internal
 public class ValueCalculatorInternal {
+    @SuppressWarnings("unused")
+    private static final Random RANDOM = Random.createThreadSafe();
+
     private final Map<String, VariableSource> variables;
     private final Map<String, Either<WrappedExpression, Double>> expressions;
     private final ConcurrentHashMap<ValueCalculatorContext, HashMap<String, Double>> variableCache = new ConcurrentHashMap<>();
@@ -43,11 +49,12 @@ public class ValueCalculatorInternal {
             it -> Double.valueOf(it.string)
         );
 
-    private static final Codec<WrappedExpression> EXPRESSION_BUILDER_CODEC =
-        Codec.either(EXPRESSION_BUILDER_STRING_CODEC, EXPRESSION_BUILDER_DOUBLE_CODEC).xmap(
-            it -> it.map(Function.identity(), Function.identity()),
-            Either::left
-        );
+    public static final Codec<WrappedExpression> EXPRESSION_BUILDER_CODEC =
+        EXPRESSION_BUILDER_STRING_CODEC;
+//        Codec.either(EXPRESSION_BUILDER_STRING_CODEC, EXPRESSION_BUILDER_DOUBLE_CODEC).xmap(
+//            either -> either.map(it -> it, it -> it),
+//            Either::left
+//        );
 
     public static final Codec<ValueCalculatorInternal> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.unboundedMap(Codec.STRING, VariableSource.CODEC)
@@ -80,7 +87,7 @@ public class ValueCalculatorInternal {
             }
         }
 
-        if (source instanceof VariableSourceTypes.Equation equationSource) {
+        if (source instanceof VariableSourceWithEquations equationSource) {
             equationSource.setupExpressionBuilder(variableCache.get(context));
         }
 
@@ -149,11 +156,43 @@ public class ValueCalculatorInternal {
         Expression internalExpression,
         String[] potentialVariables
     ) {
-        private static final Pattern regex = Pattern.compile("[a-z]+\\(?");
+        private static Operator createComparisonOperator(String name, BiPredicate<Double, Double> predicate) {
+            return new Operator(name, 2, true, Operator.PRECEDENCE_ADDITION - 1) {
+                @Override
+                public double apply(double... args) {
+                    return predicate.test(args[0], args[1]) ? 1.0 : 0.0;
+                }
+            };
+        }
+
+        private static final List<Function> FUNCTIONS = List.of(
+            new Function("rand", 0) {
+                @Override
+                public double apply(double... args) {
+                    return RANDOM.nextDouble();
+                }
+            },
+            new Function("randint", 1) {
+                @Override
+                public double apply(double... args) {
+                    return RANDOM.nextInt(Math.round((float) args[0]));
+                }
+            }
+        );
+
+        private static final List<Operator> OPERATORS = List.of(
+            createComparisonOperator(">", (a, b) -> a > b),
+            createComparisonOperator("<", (a, b) -> a < b),
+            createComparisonOperator(">=", (a, b) -> a >= b),
+            createComparisonOperator("<=", (a, b) -> a <= b),
+            createComparisonOperator("==", Objects::equals)
+        );
+
+        private static final Pattern REGEX = Pattern.compile("[a-z]+\\(?");
 
         public static WrappedExpression of(String string) {
             var potentialVariables = new HashSet<String>();
-            var matcher = regex.matcher(string);
+            var matcher = REGEX.matcher(string);
             while (matcher.find()) {
                 var group = matcher.group();
                 if (!group.endsWith("(")) potentialVariables.add(group);
@@ -161,7 +200,12 @@ public class ValueCalculatorInternal {
 
             return new WrappedExpression(
                 string,
-                new ExpressionBuilder(string).variables(potentialVariables).build(),
+                new ExpressionBuilder(string)
+                    .variables(potentialVariables)
+                    .functions(FUNCTIONS)
+                    .operator(OPERATORS)
+                    .implicitMultiplication(false)
+                    .build(),
                 potentialVariables.toArray(new String[0])
             );
         }

@@ -1,9 +1,11 @@
 package dev.mim1q.gimm1q.valuecalculators.variables;
 
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.valuecalculators.internal.LootConditionSerialization;
+import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal;
 import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal.WrappedExpression;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
@@ -205,7 +207,7 @@ public final class VariableSourceTypes {
         }
     }
 
-    public static class Equation implements VariableSourceWithDependencies {
+    public static class Equation implements VariableSourceWithEquations {
         private final WrappedExpression expressionBuilder;
         private Expression currentExpression = null;
 
@@ -213,13 +215,14 @@ public final class VariableSourceTypes {
             this.expressionBuilder = WrappedExpression.of(expression);
         }
 
+        public String getExpressionString() {
+            return expressionBuilder.string();
+        }
+
+        @Override
         public void setupExpressionBuilder(Map<String, Double> previousVariables) {
             currentExpression = expressionBuilder.expression();
             currentExpression.setVariables(previousVariables);
-        }
-
-        public String getExpressionString() {
-            return expressionBuilder.string();
         }
 
         @Override
@@ -317,12 +320,17 @@ public final class VariableSourceTypes {
     }
 
     private record Condition(
-        LootCondition condition,
+        Either<LootCondition, WrappedExpression> condition,
         VariableSource ifTrue,
         VariableSource ifFalse
-    ) implements VariableSourceWithDependencies {
+    ) implements VariableSourceWithEquations {
+        static final Codec<Either<LootCondition, WrappedExpression>> CONDITION_CODEC = Codec.either(
+            LootConditionSerialization.CODEC,
+            ValueCalculatorInternal.EXPRESSION_BUILDER_CODEC
+        );
+
         public static final Codec<Condition> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            LootConditionSerialization.CODEC
+            CONDITION_CODEC
                 .fieldOf("condition")
                 .forGetter(Condition::condition),
             VariableSource.CODEC
@@ -336,10 +344,7 @@ public final class VariableSourceTypes {
 
         @Override
         public double evaluate(ValueCalculatorContext context) {
-            var lootContext = createLootContext(context);
-            if (lootContext == null) return 0.0;
-
-            return condition.test(lootContext)
+            return testCondition(condition, context)
                 ? ifTrue.evaluate(context)
                 : ifFalse.evaluate(context);
         }
@@ -364,11 +369,25 @@ public final class VariableSourceTypes {
                 ? sourceWithDependencies.getPotentialVariableNames() : new String[0];
             var ifFalseDependencies = (ifFalse instanceof VariableSourceWithDependencies sourceWithDependencies)
                 ? sourceWithDependencies.getPotentialVariableNames() : new String[0];
+            var stream = Stream.concat(Arrays.stream(ifTrueDependencies), Arrays.stream(ifFalseDependencies));
 
-            return Stream
-                .concat(Arrays.stream(ifTrueDependencies), Arrays.stream(ifFalseDependencies))
+            if (condition.right().isPresent()) {
+                stream = Stream.concat(stream, Arrays.stream(condition.right().get().potentialVariables()));
+            }
+
+            return stream
                 .distinct()
                 .toArray(String[]::new);
+        }
+
+        static boolean testCondition(Either<LootCondition, WrappedExpression> condition, ValueCalculatorContext context) {
+            if (condition.left().isPresent()) {
+                var lootContext = createLootContext(context);
+                if (lootContext == null) return false;
+                return condition.left().get().test(lootContext);
+            } else {
+                return condition.right().orElseThrow().expression().evaluate() != 0.0;
+            }
         }
 
         static @Nullable LootContext createLootContext(ValueCalculatorContext context) {
@@ -389,12 +408,25 @@ public final class VariableSourceTypes {
                 )
             ).build(null);
         }
+
+        @Override
+        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
+            if (condition.right().isPresent()) {
+                condition.right().get().expression().setVariables(previousVariables);
+            }
+            if (ifTrue instanceof VariableSourceWithEquations sourceWithEquations) {
+                sourceWithEquations.setupExpressionBuilder(previousVariables);
+            }
+            if (ifFalse instanceof VariableSourceWithEquations sourceWithEquations) {
+                sourceWithEquations.setupExpressionBuilder(previousVariables);
+            }
+        }
     }
 
     public record Switch(
         List<Case> cases,
         VariableSource fallback
-    ) implements VariableSourceWithDependencies {
+    ) implements VariableSourceWithEquations {
         public static final Codec<Switch> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec
                 .list(Case.CODEC)
@@ -407,9 +439,8 @@ public final class VariableSourceTypes {
 
         @Override
         public double evaluate(ValueCalculatorContext context) {
-            var lootContext = Condition.createLootContext(context);
             for (var currentCase : cases) {
-                if (currentCase.condition.test(lootContext)) {
+                if (Condition.testCondition(currentCase.condition, context)) {
                     return currentCase.result.evaluate(context);
                 }
             }
@@ -426,8 +457,11 @@ public final class VariableSourceTypes {
         public String[] getPotentialVariableNames() {
             Stream<String> stream = Stream.of();
             for (var currentCase : cases) {
-                if (currentCase.condition instanceof VariableSourceWithDependencies sourceWithDependencies) {
+                if (currentCase.result instanceof VariableSourceWithDependencies sourceWithDependencies) {
                     stream = Stream.concat(stream, Arrays.stream(sourceWithDependencies.getPotentialVariableNames()));
+                }
+                if (currentCase.condition.right().isPresent()) {
+                    stream = Stream.concat(stream, Arrays.stream(currentCase.condition.right().get().potentialVariables()));
                 }
             }
 
@@ -436,12 +470,25 @@ public final class VariableSourceTypes {
                 .toArray(String[]::new);
         }
 
+        @Override
+        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
+            for (var currentCase : cases) {
+                if (currentCase.condition.right().isPresent()) {
+                    currentCase.condition.right().get().expression().setVariables(previousVariables);
+                }
+            }
+
+            if (fallback instanceof VariableSourceWithEquations sourceWithEquations) {
+                sourceWithEquations.setupExpressionBuilder(previousVariables);
+            }
+        }
+
         private record Case(
-            LootCondition condition,
+            Either<LootCondition, WrappedExpression> condition,
             VariableSource result
         ) {
             public static final Codec<Case> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-                LootConditionSerialization.CODEC
+                Condition.CONDITION_CODEC
                     .fieldOf("condition")
                     .forGetter(Case::condition),
                 VariableSource.CODEC
@@ -455,7 +502,7 @@ public final class VariableSourceTypes {
         VariableSource value,
         List<Threshold> thresholds,
         VariableSource fallback
-    ) implements VariableSourceWithDependencies {
+    ) implements VariableSourceWithEquations {
         public static final Codec<Thresholds> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             VariableSource.CODEC
                 .fieldOf("value")
@@ -497,6 +544,9 @@ public final class VariableSourceTypes {
             if (value instanceof VariableSourceWithDependencies sourceWithDependencies) {
                 stream = Stream.concat(stream, Arrays.stream(sourceWithDependencies.getPotentialVariableNames()));
             }
+            if (fallback instanceof VariableSourceWithDependencies sourceWithDependencies) {
+                stream = Stream.concat(stream, Arrays.stream(sourceWithDependencies.getPotentialVariableNames()));
+            }
             return stream.distinct().toArray(String[]::new);
         }
 
@@ -508,6 +558,22 @@ public final class VariableSourceTypes {
             }
 
             return stream.toList();
+        }
+
+        @Override
+        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
+            if (value instanceof VariableSourceWithEquations sourceWithEquations) {
+                sourceWithEquations.setupExpressionBuilder(previousVariables);
+            }
+            for (var currentThreshold : thresholds) {
+                if (currentThreshold.result instanceof VariableSourceWithEquations sourceWithEquations) {
+                    sourceWithEquations.setupExpressionBuilder(previousVariables);
+                }
+            }
+
+            if (fallback instanceof VariableSourceWithEquations sourceWithEquations) {
+                sourceWithEquations.setupExpressionBuilder(previousVariables);
+            }
         }
 
         private record Threshold(

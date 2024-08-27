@@ -20,23 +20,31 @@ public final class LootConditionSerialization {
     public static final Codec<LootCondition> CODEC = new Codec<>() {
         @Override
         public <T> DataResult<T> encode(LootCondition input, DynamicOps<T> ops, T prefix) {
-            return DataResult.success(
-                JsonOps.INSTANCE.convertTo(
-                    ops,
-                    GSON.toJsonTree(input, LootCondition.class)
-                )
-            );
+            try {
+                return DataResult.success(
+                    JsonOps.INSTANCE.convertTo(
+                        ops,
+                        GSON.toJsonTree(input, LootCondition.class)
+                    )
+                );
+            } catch (Exception e) {
+                return DataResult.error(e::getMessage);
+            }
         }
 
         @Override
         public <T> DataResult<Pair<LootCondition, T>> decode(DynamicOps<T> ops, T input) {
-            return DataResult.success(Pair.of(
-                GSON.fromJson(
-                    ops.convertTo(JsonOps.INSTANCE, input),
-                    LootCondition.class
-                ),
-                input
-            ));
+            try {
+                return DataResult.success(Pair.of(
+                    GSON.fromJson(
+                        ops.convertTo(JsonOps.INSTANCE, input),
+                        LootCondition.class
+                    ),
+                    input
+                ));
+            } catch (Exception e) {
+                return DataResult.error(e::getMessage);
+            }
         }
     };
 }
