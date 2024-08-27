@@ -1,26 +1,12 @@
 {
     "variables": {
-        "rng": {
-            "type": "gimm1q:condition",
-            "condition": {
-                "condition": "minecraft:random_chance",
-                "chance": 0.5
-            },
-            "if_true": 0.5,
-            "if_false": 0.0
-        },
         "power": {
             "type": "gimm1q:attribute",
             "attribute": "generic.attack_damage"
-        },
-        "b": "a",
-        "a": "b"
+        }
     },
+
     "values": {
-        "some_value": "2 * power + rng",
-        "some_other_value": "8.0",
-        "stick": "16.0 + power",
-        "double_value": 2.0,
-        "string_value": "3.0"
+        "my_value": "2 * power"
     }
 }

@@ -150,6 +150,37 @@ public final class VariableSourceTypes {
     public static final VariableSourceType<?> SWITCH =
         VariableSource.register(Gimm1q.id("switch"), Switch.CODEC);
 
+    /**
+     * Returns a value based on defined thresholds of a given value.
+     * The thresholds should be ordered from lowest to highest. For example:
+     *
+     * <pre>{@code
+     *     "variables": {
+     *         "my_var": {
+     *             "type": "gimm1q:thresholds",
+     *             "value": "some_other_variable",
+     *             "thresholds": [
+     *                  {
+     *                      "threshold": 0.0,
+     *                      "result": 10.0
+     *                  },
+     *                  {
+     *                      "threshold": 0.5,
+     *                      "result": 5.0
+     *                  },
+     *                  {
+     *                      "threshold": 1.0,
+     *                      "result": 0.0
+     *                  }
+     *             ]
+     *             "fallback": 10.0
+     *         }
+     *     }
+     * }</pre>
+     */
+    public static final VariableSourceType<?> THRESHOLDS =
+        VariableSource.register(Gimm1q.id("thresholds"), Thresholds.CODEC);
+
     public static void init() {
     }
 
@@ -417,6 +448,79 @@ public final class VariableSourceTypes {
                     .fieldOf("result")
                     .forGetter(Case::result)
             ).apply(instance, Case::new));
+        }
+    }
+
+    public record Thresholds(
+        VariableSource value,
+        List<Threshold> thresholds,
+        VariableSource fallback
+    ) implements VariableSourceWithDependencies {
+        public static final Codec<Thresholds> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+            VariableSource.CODEC
+                .fieldOf("value")
+                .forGetter(Thresholds::value),
+            Codec
+                .list(Threshold.CODEC)
+                .fieldOf("thresholds")
+                .forGetter(Thresholds::thresholds),
+            VariableSource.CODEC
+                .fieldOf("fallback")
+                .forGetter(Thresholds::fallback)
+        ).apply(instance, Thresholds::new));
+
+        @Override
+        public double evaluate(ValueCalculatorContext context) {
+            var value = this.value.evaluate(context);
+            for (var currentThreshold : thresholds) {
+                if (value >= currentThreshold.threshold) {
+                    return currentThreshold.result.evaluate(context);
+                }
+            }
+
+            return fallback.evaluate(context);
+        }
+
+        @Override
+        public VariableSourceType<? extends VariableSource> getType() {
+            return THRESHOLDS;
+        }
+
+        @Override
+        public String[] getPotentialVariableNames() {
+            Stream<String> stream = Stream.of();
+            for (var currentThreshold : thresholds) {
+                if (currentThreshold.result instanceof VariableSourceWithDependencies sourceWithDependencies) {
+                    stream = Stream.concat(stream, Arrays.stream(sourceWithDependencies.getPotentialVariableNames()));
+                }
+            }
+            if (value instanceof VariableSourceWithDependencies sourceWithDependencies) {
+                stream = Stream.concat(stream, Arrays.stream(sourceWithDependencies.getPotentialVariableNames()));
+            }
+            return stream.distinct().toArray(String[]::new);
+        }
+
+        @Override
+        public List<ValueCalculatorParameter<?>> getRequiredParameters() {
+            Stream<ValueCalculatorParameter<?>> stream = value.getRequiredParameters().stream();
+            for (var currentThreshold : thresholds) {
+                stream = Stream.concat(stream, currentThreshold.result.getRequiredParameters().stream());
+            }
+
+            return stream.toList();
+        }
+
+        private record Threshold(
+            double threshold,
+            VariableSource result
+        ) {
+            public static final Codec<Threshold> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.DOUBLE.fieldOf("threshold")
+                    .forGetter(Threshold::threshold),
+                VariableSource.CODEC
+                    .fieldOf("result")
+                    .forGetter(Threshold::result)
+            ).apply(instance, Threshold::new));
         }
     }
 

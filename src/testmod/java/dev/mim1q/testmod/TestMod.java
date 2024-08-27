@@ -56,9 +56,11 @@ public class TestMod implements ModInitializer {
     public static final Item VALUE_CALCULATOR_TESTER = registerItem("value_calculator_tester", new Item(new FabricItemSettings()) {
         @Override
         public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
+
             var context = ValueCalculatorContext.create()
                 .with(ValueCalculatorParameter.HOLDER, user)
                 .with(ValueCalculatorParameter.TARGET, user);
+
             if (user.isSneaking()) {
                 if (world.isClient) {
                     user.sendMessage(Text.literal("Value (client): " + TEST_VALUE_CALCULATOR.calculate(context)));

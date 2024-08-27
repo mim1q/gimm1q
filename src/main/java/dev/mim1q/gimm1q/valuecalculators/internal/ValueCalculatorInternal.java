@@ -20,12 +20,12 @@ import java.util.regex.Pattern;
 @ApiStatus.Internal
 public class ValueCalculatorInternal {
     private final Map<String, VariableSource> variables;
-    private final Map<String, WrappedExpression> expressions;
+    private final Map<String, Either<WrappedExpression, Double>> expressions;
     private final ConcurrentHashMap<ValueCalculatorContext, HashMap<String, Double>> variableCache = new ConcurrentHashMap<>();
 
     private ValueCalculatorInternal(
         Map<String, VariableSource> variables,
-        Map<String, WrappedExpression> expressions
+        Map<String, Either<WrappedExpression, Double>> expressions
     ) {
         this.variables = variables;
         this.expressions = expressions;
@@ -51,13 +51,9 @@ public class ValueCalculatorInternal {
 
     public static final Codec<ValueCalculatorInternal> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.unboundedMap(Codec.STRING, VariableSource.CODEC)
-//            .xmap(
-//                it -> List.copyOf(it.entrySet()),
-//                it -> it.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
-//            )
             .fieldOf("variables")
             .forGetter(it -> it.variables),
-        Codec.unboundedMap(Codec.STRING, EXPRESSION_BUILDER_CODEC)
+        Codec.unboundedMap(Codec.STRING, Codec.either(EXPRESSION_BUILDER_CODEC, Codec.DOUBLE))
             .fieldOf("values")
             .forGetter(it -> it.expressions)
     ).apply(instance, ValueCalculatorInternal::new));
@@ -103,24 +99,36 @@ public class ValueCalculatorInternal {
         return result;
     }
 
-    public Optional<Double> tryCalculateExpression(String name, ValueCalculatorContext context) {
-        var expression = expressions.get(name);
-        if (expression == null) return Optional.empty();
+    private Optional<Double> getDoubleValueOrCalculateExpression(String name, ValueCalculatorContext context) {
+        var exp = expressions.get(name);
+        if (exp == null) return Optional.empty();
+
+        var doubleEither = exp.right();
+        if (doubleEither.isPresent()) return doubleEither;
+
+        var expressionEither = exp.left();
+        if (expressionEither.isEmpty()) return Optional.empty();
+
+        var expression = expressionEither.get();
 
         variableCache.put(context, new HashMap<>());
-        var startTime = System.nanoTime();
         for (var variable : expression.potentialVariables()) {
             tryCalculateVariableInternal(variable, context, new HashSet<>());
         }
-        var result = Optional.of(expression.expression()
+        return Optional.of(expression.expression()
             .setVariables(variableCache.getOrDefault(context, new HashMap<>()))
             .evaluate()
         );
+    }
+
+    public Optional<Double> tryCalculateExpression(String name, ValueCalculatorContext context) {
+        var startTime = System.nanoTime();
+        var result = getDoubleValueOrCalculateExpression(name, context);
+        clearVariableCache(context);
         var endTime = System.nanoTime();
         if (Gimm1q.debugMessages)
             Gimm1q.LOGGER.info("Value Calculator for expression: {} took {}ms", name, (endTime - startTime) / 1_000_000f);
 
-        clearVariableCache(context);
         return result;
     }
 
