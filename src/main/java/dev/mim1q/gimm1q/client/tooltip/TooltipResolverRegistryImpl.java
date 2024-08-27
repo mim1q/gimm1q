@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 @ApiStatus.Internal
 public class TooltipResolverRegistryImpl implements TooltipResolverRegistry {
-    public static final HashMap<Item, TooltipResolver> resolvers = new HashMap<>();
+    private static final HashMap<Item, TooltipResolver> resolvers = new HashMap<>();
 
     static TooltipResolverRegistry INSTANCE = new TooltipResolverRegistryImpl();
 
