@@ -12,6 +12,7 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Interface for implementing custom sources for variables in value calculators.
@@ -75,7 +76,7 @@ public interface VariableSource {
      * @return the evaluated value
      */
     @ApiStatus.OverrideOnly
-    double evaluate(ValueCalculatorContext context);
+    double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables);
 
     /**
      * Gets the registered type of this {@link VariableSource}

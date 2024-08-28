@@ -7,17 +7,14 @@ import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSource;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceWithDependencies;
-import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceWithEquations;
 import net.minecraft.util.math.random.Random;
-import net.objecthunter.exp4j.Expression;
-import net.objecthunter.exp4j.ExpressionBuilder;
-import net.objecthunter.exp4j.function.Function;
-import net.objecthunter.exp4j.operator.Operator;
 import org.jetbrains.annotations.ApiStatus;
+import redempt.crunch.CompiledExpression;
+import redempt.crunch.Crunch;
+import redempt.crunch.functional.ExpressionEnv;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 
 @ApiStatus.Internal
@@ -87,11 +84,11 @@ public class ValueCalculatorInternal {
             }
         }
 
-        if (source instanceof VariableSourceWithEquations equationSource) {
-            equationSource.setupExpressionBuilder(variableCache.get(context));
-        }
+//        if (source instanceof VariableSourceWithEquations equationSource) {
+//            equationSource.setupExpressionBuilder(variableCache.get(context));
+//        }
 
-        cached.put(name, source.evaluate(context));
+        cached.put(name, source.evaluate(context, cached));
         return Optional.ofNullable(cached.get(name));
     }
 
@@ -122,9 +119,14 @@ public class ValueCalculatorInternal {
         for (var variable : expression.potentialVariables()) {
             tryCalculateVariableInternal(variable, context, new HashSet<>());
         }
+
+        var variables = Arrays
+            .stream(expression.potentialVariables)
+            .mapToDouble(it -> variableCache.get(context).get(it))
+            .toArray();
+
         return Optional.of(expression.expression()
-            .setVariables(variableCache.getOrDefault(context, new HashMap<>()))
-            .evaluate()
+            .evaluate(variables)
         );
     }
 
@@ -153,44 +155,13 @@ public class ValueCalculatorInternal {
 
     public record WrappedExpression(
         String string,
-        Expression internalExpression,
+        CompiledExpression internalExpression,
         String[] potentialVariables
     ) {
-        private static Operator createComparisonOperator(String name, BiPredicate<Double, Double> predicate) {
-            return new Operator(name, 2, true, Operator.PRECEDENCE_ADDITION - 1) {
-                @Override
-                public double apply(double... args) {
-                    return predicate.test(args[0], args[1]) ? 1.0 : 0.0;
-                }
-            };
-        }
-
-        private static final List<Function> FUNCTIONS = List.of(
-            new Function("rand", 0) {
-                @Override
-                public double apply(double... args) {
-                    return RANDOM.nextDouble();
-                }
-            },
-            new Function("randint", 1) {
-                @Override
-                public double apply(double... args) {
-                    return RANDOM.nextInt(Math.round((float) args[0]));
-                }
-            }
-        );
-
-        private static final List<Operator> OPERATORS = List.of(
-            createComparisonOperator(">", (a, b) -> a > b),
-            createComparisonOperator("<", (a, b) -> a < b),
-            createComparisonOperator(">=", (a, b) -> a >= b),
-            createComparisonOperator("<=", (a, b) -> a <= b),
-            createComparisonOperator("==", Objects::equals)
-        );
-
         private static final Pattern REGEX = Pattern.compile("[a-z]+\\(?");
 
         public static WrappedExpression of(String string) {
+
             var potentialVariables = new HashSet<String>();
             var matcher = REGEX.matcher(string);
             while (matcher.find()) {
@@ -198,20 +169,24 @@ public class ValueCalculatorInternal {
                 if (!group.endsWith("(")) potentialVariables.add(group);
             }
 
+            var variables = potentialVariables.stream().distinct().toArray(String[]::new);
             return new WrappedExpression(
                 string,
-                new ExpressionBuilder(string)
-                    .variables(potentialVariables)
-                    .functions(FUNCTIONS)
-                    .operator(OPERATORS)
-                    .implicitMultiplication(false)
-                    .build(),
-                potentialVariables.toArray(new String[0])
+                Crunch.compileExpression(string, new ExpressionEnv().setVariableNames(variables)),
+                variables
             );
         }
 
-        public Expression expression() {
+        public CompiledExpression expression() {
             return internalExpression;
+        }
+
+        public double evaluate(Map<String, Double> variables) {
+            return expression().evaluate(Arrays
+                .stream(potentialVariables)
+                .mapToDouble(it -> variables.getOrDefault(it, 0.0))
+                .toArray()
+            );
         }
     }
 }

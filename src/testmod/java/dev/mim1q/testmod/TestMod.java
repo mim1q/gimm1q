@@ -1,7 +1,6 @@
 package dev.mim1q.testmod;
 
 import com.mojang.brigadier.arguments.FloatArgumentType;
-import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry;
 import dev.mim1q.gimm1q.effect.ExtendedStatusEffect;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeModifiers;
@@ -20,6 +19,7 @@ import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.player.PlayerEntity;
@@ -35,6 +35,9 @@ import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -65,15 +68,38 @@ public class TestMod implements ModInitializer {
 
             if (user.isSneaking()) {
                 if (world.isClient) {
-                    user.sendMessage(Text.literal("Value (client): " + TEST_VALUE_CALCULATOR.calculate(context)));
+                    var start = System.nanoTime();
+                    var result = TEST_VALUE_CALCULATOR.calculate(context);
+                    var time = (System.nanoTime() - start) / 1_000_000f;
+
+                    user.sendMessage(Text.literal("Value (client): " + result + " (" + time + "ms)"), true);
                 }
             } else {
                 if (!world.isClient) {
-                    user.sendMessage(Text.literal("Value (server): " + TEST_VALUE_CALCULATOR.calculate(context)));
+                    var start = System.nanoTime();
+                    var result = TEST_VALUE_CALCULATOR.calculate(context);
+                    var time = (System.nanoTime() - start) / 1_000_000f;
+
+                    var stack = user.getStackInHand(hand);
+                    //noinspection DataFlowIssue
+                    stack.getOrCreateNbt().putInt("avg_count", stack.getNbt().getInt("avg_count") + 1);
+                    stack.getNbt().putDouble("avg_sum", stack.getNbt().getDouble("avg_sum") + time);
+
+                    user.sendMessage(Text.literal("Value (server): " + result + " (" + time + "ms)"), true);
                 }
             }
 
             return super.use(world, user, hand);
+        }
+
+        @Override
+        public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+            super.appendTooltip(stack, world, tooltip, context);
+
+            if (stack.hasNbt()) {
+                var time = stack.getNbt().getDouble("avg_sum") / stack.getNbt().getInt("avg_count");
+                tooltip.add(Text.literal("Average time: " + time + "ms."));
+            }
         }
     });
 
@@ -102,7 +128,7 @@ public class TestMod implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Hello Fabric world!");
-        Gimm1q.debugMessages = true;
+//        Gimm1q.debugMessages = true;
 
         CommandRegistrationCallback.EVENT.register((listener, registry, environment) -> {
             listener.register(literal("modify_screenshake")

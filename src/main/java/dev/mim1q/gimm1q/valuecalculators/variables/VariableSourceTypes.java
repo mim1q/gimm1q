@@ -21,7 +21,6 @@ import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.StringIdentifiable;
-import net.objecthunter.exp4j.Expression;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -197,7 +196,7 @@ public final class VariableSourceTypes {
         ).apply(instance, Constant::new));
 
         @Override
-        public double evaluate(ValueCalculatorContext context) {
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
             return value;
         }
 
@@ -209,7 +208,6 @@ public final class VariableSourceTypes {
 
     public static class Equation implements VariableSourceWithEquations {
         private final WrappedExpression expressionBuilder;
-        private Expression currentExpression = null;
 
         Equation(String expression) {
             this.expressionBuilder = WrappedExpression.of(expression);
@@ -220,21 +218,13 @@ public final class VariableSourceTypes {
         }
 
         @Override
-        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
-            currentExpression = expressionBuilder.expression();
-            currentExpression.setVariables(previousVariables);
-        }
-
-        @Override
         public String[] getPotentialVariableNames() {
             return expressionBuilder.potentialVariables();
         }
 
         @Override
-        public double evaluate(ValueCalculatorContext context) {
-            return currentExpression == null
-                ? 0.0
-                : currentExpression.evaluate();
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
+            return expressionBuilder.evaluate(previousVariables);
         }
 
         @Override
@@ -261,7 +251,7 @@ public final class VariableSourceTypes {
         ).apply(instance, Attribute::new));
 
         @Override
-        public double evaluate(ValueCalculatorContext context) {
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
             var parameter = selector.parameter;
 
             return context.mapOrDefault(
@@ -294,7 +284,7 @@ public final class VariableSourceTypes {
         ).apply(instance, Enchantment::new));
 
         @Override
-        public double evaluate(ValueCalculatorContext context) {
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
             var stack = context.mapOrDefault(
                 ValueCalculatorParameter.HOLDER_STACK,
                 it -> it,
@@ -343,10 +333,10 @@ public final class VariableSourceTypes {
 
 
         @Override
-        public double evaluate(ValueCalculatorContext context) {
-            return testCondition(condition, context)
-                ? ifTrue.evaluate(context)
-                : ifFalse.evaluate(context);
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
+            return testCondition(condition, context, previousVariables)
+                ? ifTrue.evaluate(context, previousVariables)
+                : ifFalse.evaluate(context, previousVariables);
         }
 
         @Override
@@ -365,32 +355,34 @@ public final class VariableSourceTypes {
 
         @Override
         public String[] getPotentialVariableNames() {
-            var ifTrueDependencies = (ifTrue instanceof VariableSourceWithDependencies sourceWithDependencies)
-                ? sourceWithDependencies.getPotentialVariableNames() : new String[0];
-            var ifFalseDependencies = (ifFalse instanceof VariableSourceWithDependencies sourceWithDependencies)
-                ? sourceWithDependencies.getPotentialVariableNames() : new String[0];
-            var stream = Stream.concat(Arrays.stream(ifTrueDependencies), Arrays.stream(ifFalseDependencies));
+            Set<String> result = new HashSet<>();
 
-            if (condition.right().isPresent()) {
-                stream = Stream.concat(stream, Arrays.stream(condition.right().get().potentialVariables()));
+            if (ifTrue instanceof VariableSourceWithDependencies sourceWithDependencies) {
+                Collections.addAll(result, sourceWithDependencies.getPotentialVariableNames());
             }
 
-            return stream
-                .distinct()
-                .toArray(String[]::new);
+            if (ifFalse instanceof VariableSourceWithDependencies sourceWithDependencies) {
+                Collections.addAll(result, sourceWithDependencies.getPotentialVariableNames());
+            }
+
+            if (condition.right().isPresent()) {
+                Collections.addAll(result, condition.right().get().potentialVariables());
+            }
+
+            return result.toArray(new String[0]);
         }
 
-        static boolean testCondition(Either<LootCondition, WrappedExpression> condition, ValueCalculatorContext context) {
+        static boolean testCondition(Either<LootCondition, WrappedExpression> condition, ValueCalculatorContext context, Map<String, Double> previousVariables) {
             if (condition.left().isPresent()) {
-                var lootContext = createLootContext(context);
+                var lootContext = createLootContext(context, previousVariables);
                 if (lootContext == null) return false;
                 return condition.left().get().test(lootContext);
             } else {
-                return condition.right().orElseThrow().expression().evaluate() != 0.0;
+                return condition.right().orElseThrow().evaluate(previousVariables) != 0.0;
             }
         }
 
-        static @Nullable LootContext createLootContext(ValueCalculatorContext context) {
+        static @Nullable LootContext createLootContext(ValueCalculatorContext context, Map<String, Double> previousVariables) {
             var holder = context.get(ValueCalculatorParameter.HOLDER);
             if (holder == null || holder.getWorld().isClient()) {
                 return null;
@@ -407,19 +399,6 @@ public final class VariableSourceTypes {
                     (holder instanceof PlayerEntity player) ? player.getLuck() : 0f
                 )
             ).build(null);
-        }
-
-        @Override
-        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
-            if (condition.right().isPresent()) {
-                condition.right().get().expression().setVariables(previousVariables);
-            }
-            if (ifTrue instanceof VariableSourceWithEquations sourceWithEquations) {
-                sourceWithEquations.setupExpressionBuilder(previousVariables);
-            }
-            if (ifFalse instanceof VariableSourceWithEquations sourceWithEquations) {
-                sourceWithEquations.setupExpressionBuilder(previousVariables);
-            }
         }
     }
 
@@ -438,14 +417,14 @@ public final class VariableSourceTypes {
         ).apply(instance, Switch::new));
 
         @Override
-        public double evaluate(ValueCalculatorContext context) {
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
             for (var currentCase : cases) {
-                if (Condition.testCondition(currentCase.condition, context)) {
-                    return currentCase.result.evaluate(context);
+                if (Condition.testCondition(currentCase.condition, context, previousVariables)) {
+                    return currentCase.result.evaluate(context, previousVariables);
                 }
             }
 
-            return fallback.evaluate(context);
+            return fallback.evaluate(context, previousVariables);
         }
 
         @Override
@@ -468,19 +447,6 @@ public final class VariableSourceTypes {
             return stream
                 .distinct()
                 .toArray(String[]::new);
-        }
-
-        @Override
-        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
-            for (var currentCase : cases) {
-                if (currentCase.condition.right().isPresent()) {
-                    currentCase.condition.right().get().expression().setVariables(previousVariables);
-                }
-            }
-
-            if (fallback instanceof VariableSourceWithEquations sourceWithEquations) {
-                sourceWithEquations.setupExpressionBuilder(previousVariables);
-            }
         }
 
         private record Case(
@@ -517,15 +483,15 @@ public final class VariableSourceTypes {
         ).apply(instance, Thresholds::new));
 
         @Override
-        public double evaluate(ValueCalculatorContext context) {
-            var value = this.value.evaluate(context);
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
+            var value = this.value.evaluate(context, previousVariables);
             for (var currentThreshold : thresholds) {
                 if (value >= currentThreshold.threshold) {
-                    return currentThreshold.result.evaluate(context);
+                    return currentThreshold.result.evaluate(context, previousVariables);
                 }
             }
 
-            return fallback.evaluate(context);
+            return fallback.evaluate(context, previousVariables);
         }
 
         @Override
@@ -558,22 +524,6 @@ public final class VariableSourceTypes {
             }
 
             return stream.toList();
-        }
-
-        @Override
-        public void setupExpressionBuilder(Map<String, Double> previousVariables) {
-            if (value instanceof VariableSourceWithEquations sourceWithEquations) {
-                sourceWithEquations.setupExpressionBuilder(previousVariables);
-            }
-            for (var currentThreshold : thresholds) {
-                if (currentThreshold.result instanceof VariableSourceWithEquations sourceWithEquations) {
-                    sourceWithEquations.setupExpressionBuilder(previousVariables);
-                }
-            }
-
-            if (fallback instanceof VariableSourceWithEquations sourceWithEquations) {
-                sourceWithEquations.setupExpressionBuilder(previousVariables);
-            }
         }
 
         private record Threshold(

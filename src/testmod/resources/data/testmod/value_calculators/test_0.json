@@ -6,11 +6,20 @@
             "condition": "a > 5",
             "if_true": "a",
             "if_false": "5"
-        }
+        },
+        "rng": {
+            "type": "gimm1q:condition",
+            "condition": {
+                "condition": "random_chance",
+                "chance": 0.5
+            },
+            "if_true": 0,
+            "if_false": 1
+        },
+        "b": "a + 10"
     },
 
     "values": {
-        "my_value": "power",
-        "const_value": 500
+        "stick": "power + rng * b"
     }
 }

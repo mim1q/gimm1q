@@ -8,6 +8,9 @@ version = ModData.VERSION
 group = ModData.GROUP
 
 repositories {
+    maven {
+        url = uri("https://redempt.dev") // Crunch library for expression evaluation
+    }
 }
 
 dependencies {
@@ -21,7 +24,7 @@ dependencies {
         "testmodImplementation"(sourceSets.main.get().output)
     }
 
-    include(implementation("net.objecthunter:exp4j:0.4.8")!!)
+    include(implementation("com.github.Redempt:Crunch:2.0.3")!!)
 }
 
 java {
