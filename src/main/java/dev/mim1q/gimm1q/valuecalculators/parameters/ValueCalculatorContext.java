@@ -67,6 +67,11 @@ public final class ValueCalculatorContext {
             || obj instanceof ValueCalculatorContext && parameters.equals(((ValueCalculatorContext) obj).parameters);
     }
 
+    @Override
+    public int hashCode() {
+        return parameters.hashCode();
+    }
+
     /**
      * Create an empty context
      *

@@ -158,7 +158,7 @@ public class ValueCalculatorInternal {
         CompiledExpression internalExpression,
         String[] potentialVariables
     ) {
-        private static final Pattern REGEX = Pattern.compile("[a-z]+\\(?");
+        private static final Pattern REGEX = Pattern.compile("[a-z_]+\\(?");
 
         public static WrappedExpression of(String string) {
 

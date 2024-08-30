@@ -16,7 +16,18 @@
             "if_true": 0,
             "if_false": 1
         },
-        "b": "a + 10"
+        "b": "a + 10",
+        "current_health": {
+            "type": "gimm1q:entity_nbt",
+            "entity": "holder",
+            "path": "Health"
+        },
+        "max_health": {
+            "type": "gimm1q:attribute",
+            "entity": "holder",
+            "attribute": "generic.max_health"
+        },
+        "health_percentage": "current_health / max_health"
     },
 
     "values": {

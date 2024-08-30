@@ -1,6 +1,9 @@
 package dev.mim1q.gimm1q.valuecalculators.variables;
 
+import com.mojang.brigadier.StringReader;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Either;
+import com.mojang.datafixers.util.Function3;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.mim1q.gimm1q.Gimm1q;
@@ -9,6 +12,7 @@ import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal;
 import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal.WrappedExpression;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
+import net.minecraft.command.argument.NbtPathArgumentType;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
@@ -18,6 +22,9 @@ import net.minecraft.loot.condition.LootCondition;
 import net.minecraft.loot.context.LootContext;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.nbt.AbstractNbtNumber;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.StringIdentifiable;
@@ -181,6 +188,12 @@ public final class VariableSourceTypes {
      */
     public static final VariableSourceType<?> THRESHOLDS =
         VariableSource.register(Gimm1q.id("thresholds"), Thresholds.CODEC);
+
+    public static final VariableSourceType<?> ENTITY_NBT =
+        VariableSource.register(Gimm1q.id("entity_nbt"), NbtVariableSource.createCodec(EntityNbtVariableSource::new));
+
+    public static final VariableSourceType<?> ITEM_NBT =
+        VariableSource.register(Gimm1q.id("item_nbt"), NbtVariableSource.createCodec(ItemNbtVariableSource::new));
 
     public static void init() {
     }
@@ -537,6 +550,139 @@ public final class VariableSourceTypes {
                     .fieldOf("result")
                     .forGetter(Threshold::result)
             ).apply(instance, Threshold::new));
+        }
+    }
+
+    private abstract static class NbtVariableSource implements VariableSource {
+        protected String nbtPath;
+        protected EntitySelector entitySelector;
+        protected VariableSource fallback;
+
+        public static Codec<? extends NbtVariableSource> createCodec(
+            Function3<String, EntitySelector, VariableSource, NbtVariableSource> constructor
+        ) {
+            return RecordCodecBuilder.create(instance -> instance.group(
+                Codec.STRING
+                    .fieldOf("path")
+                    .forGetter(it -> it.nbtPath),
+                StringIdentifiable.createCodec(EntitySelector::values)
+                    .optionalFieldOf("entity", EntitySelector.THIS)
+                    .forGetter(it -> it.entitySelector),
+                VariableSource.CODEC
+                    .optionalFieldOf("fallback", Constant.ZERO)
+                    .forGetter(it -> it.fallback)
+            ).apply(instance, constructor));
+        }
+
+        protected NbtVariableSource(
+            String nbtPath,
+            EntitySelector entitySelector,
+            VariableSource fallback
+        ) {
+            this.nbtPath = nbtPath;
+            this.entitySelector = entitySelector;
+            this.fallback = fallback;
+        }
+
+        protected abstract NbtCompound getNbt(ValueCalculatorContext context);
+
+        @Override
+        public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
+            var reader = new StringReader(nbtPath);
+            var nbt = getNbt(context);
+            if (nbt == null) {
+                return fallback.evaluate(context, previousVariables);
+            }
+
+            NbtPathArgumentType.NbtPath path;
+            try {
+                path = NbtPathArgumentType.nbtPath().parse(reader);
+            } catch (CommandSyntaxException e) {
+                Gimm1q.LOGGER.warn("Failed to parse NBT path: {} in nbt {}", nbtPath, nbt);
+                return fallback.evaluate(context, previousVariables);
+            }
+
+            List<NbtElement> result;
+            try {
+                result = path.get(nbt);
+                if (result.isEmpty()) {
+                    throw new Exception();
+                }
+            } catch (Exception e) {
+                Gimm1q.LOGGER.warn("Failed to get NBT path: {} in nbt {}", nbtPath, nbt);
+                return fallback.evaluate(context, previousVariables);
+            }
+
+            if (result.size() > 1) {
+                Gimm1q.LOGGER.warn("Multiple values in NBT path: {} in nbt {}", nbtPath, nbt);
+                return fallback.evaluate(context, previousVariables);
+            }
+
+            if (result.get(0) instanceof AbstractNbtNumber number) {
+                return number.doubleValue();
+            }
+
+            Gimm1q.LOGGER.warn("Failed to get NBT path: {} in nbt {}", nbtPath, nbt);
+            return fallback.evaluate(context, previousVariables);
+        }
+    }
+
+    private static class EntityNbtVariableSource extends NbtVariableSource {
+        public EntityNbtVariableSource(
+            String nbtPath,
+            EntitySelector entitySelector,
+            VariableSource fallback
+        ) {
+            super(nbtPath, entitySelector, fallback);
+        }
+
+        @Override
+        protected NbtCompound getNbt(ValueCalculatorContext context) {
+            var entity = context.get(entitySelector.parameter);
+            if (entity == null) {
+                return new NbtCompound();
+            }
+
+            return entity.writeNbt(new NbtCompound());
+        }
+
+        @Override
+        public VariableSourceType<? extends VariableSource> getType() {
+            return ENTITY_NBT;
+        }
+    }
+
+    private static class ItemNbtVariableSource extends NbtVariableSource {
+        public ItemNbtVariableSource(
+            String nbtPath,
+            EntitySelector entitySelector,
+            VariableSource fallback
+        ) {
+            super(nbtPath, entitySelector, fallback);
+        }
+
+        @Override
+        protected NbtCompound getNbt(ValueCalculatorContext context) {
+            var item = context.get(entitySelector.itemParameter);
+            if (item == null) {
+                var entity = context.get(entitySelector.parameter);
+                if (entity == null) {
+                    return new NbtCompound();
+                }
+                item = entity.getMainHandStack();
+            }
+
+            return item.getNbt();
+        }
+
+        @Override
+        public List<ValueCalculatorParameter<?>> getRequiredParameters() {
+            return super.getRequiredParameters();
+        }
+
+        @Override
+        public VariableSourceType<? extends VariableSource> getType() {
+            return ITEM_NBT;
         }
     }
 
