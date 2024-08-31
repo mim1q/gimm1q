@@ -1,14 +1,21 @@
 package dev.mim1q.gimm1q;
 
+import com.google.common.collect.Lists;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+
+import java.nio.file.Files;
+import java.util.List;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -82,5 +89,101 @@ public class Gimm1qCommands {
                 )
             )
         );
+
+
+        CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
+            dispatcher.register(literal("gimm1q:dump_value_calculators")
+                .requires(source -> source.hasPermissionLevel(2))
+                .then(argument("holder", EntityArgumentType.entity())
+                    .then(argument("target", EntityArgumentType.entity())
+                        .then(argument("count", IntegerArgumentType.integer(1))
+                            .executes(context -> {
+                                var holder = EntityArgumentType.getEntity(context, "holder");
+                                var target = EntityArgumentType.getEntity(context, "target");
+                                var count = IntegerArgumentType.getInteger(context, "count");
+
+                                var ids = ValueCalculatorResourceReloader.getAllIds();
+                                var builder = new StringBuilder();
+
+                                for (var id : ids) {
+                                    builder.append("## `").append(id).append("`\n");
+
+                                    var variables = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, true).orElseThrow();
+                                    builder.append("### Variables:\n");
+                                    builder.append("| name | average time (ms) | value |").append("\n");
+                                    builder.append("|-|-|-|").append("\n");
+                                    for (var variable : variables) {
+                                        addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, variable, true);
+                                    }
+                                    builder.append("\n");
+
+                                    builder.append("### Expressions:\n");
+                                    builder.append("| name | average time (ms) | value |").append("\n");
+                                    builder.append("|-|-|-|").append("\n");
+                                    var expressions = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, false).orElseThrow();
+                                    for (var expression : expressions) {
+                                        addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, expression, false);
+                                    }
+                                    builder.append("\n---\n");
+                                }
+
+                                var filename = "logs/gimm1q/value_calculator_dump.md";
+
+                                context.getSource().sendFeedback(
+                                    () -> Text.literal("Result dumped to file " + filename),
+                                    true
+                                );
+
+                                try {
+                                    var path = FabricLoader.getInstance().getGameDir();
+                                    var file = path.resolve(filename);
+
+                                    Files.createDirectories(file.getParent());
+                                    if (!Files.exists(file)) {
+                                        Files.createFile(file);
+                                    }
+                                    Files.writeString(file, builder.toString());
+
+                                } catch (Exception e) {
+                                    context.getSource().sendError(
+                                        Text.literal("Failed to save file: " + e.getMessage())
+                                    );
+                                    return 1;
+                                }
+
+                                return 0;
+                            })
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    private static void addResultsToBuilder(StringBuilder builder, Identifier id, int count, LivingEntity target, LivingEntity holder, String name, boolean variable) {
+        Double firstResult = null;
+        float totalTime = 0f;
+
+        for (int i = 0; i < count; i++) {
+            var startTime = System.nanoTime();
+            var value = ValueCalculatorResourceReloader.INSTANCE.calculateExpressionOrVariable(
+                id, name, ValueCalculatorContext.create()
+                    .with(ValueCalculatorParameter.TARGET, target)
+                    .with(ValueCalculatorParameter.HOLDER, holder),
+                variable
+            );
+            var time = (System.nanoTime() - startTime) / 1_000_000f;
+            if (value.isPresent() && firstResult == null) {
+                firstResult = value.get();
+            }
+            totalTime += time;
+        }
+
+        var averageTime = totalTime / count;
+        builder
+            .append("|").append(name)
+            .append("|").append(String.format("%.8f", averageTime))
+            .append("|").append(firstResult == null ? "-" : firstResult);
+        builder.append("|\n");
     }
 }
