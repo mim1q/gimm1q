@@ -1,0 +1,17 @@
+{
+    "variables": {
+        "a": 1.0,
+        "b": 2.0,
+        "c": 3.0
+    },
+    "values": {
+        "constant": 1.0,
+        "constant_string": "1.0",
+        "constant_equation": "(0.5 * 30 + 15) / (60.1 * 0.3333)",
+        "equation_simple": "a + b * c",
+        "equation_complex": "a + (b * c) / (c - 1.0)",
+        "single_variable_string": "a",
+        "single_variable_equation": "a * 2.0",
+        "single_variable_equation_complex": "(a * a * a * a * a * a + a) / a"
+    }
+}

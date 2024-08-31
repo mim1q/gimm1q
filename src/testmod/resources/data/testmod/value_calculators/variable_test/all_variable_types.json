@@ -1,0 +1,110 @@
+{
+    "variables": {
+        "constant": 1.0,
+        "expression": "constant + 2 * 50 + 500",
+        "attribute": {
+            "type": "gimm1q:attribute",
+            "attribute": "generic.movement_speed",
+            "fallback": 10.0
+        },
+        "enchantment": {
+            "type": "gimm1q:enchantment",
+            "enchantment": "minecraft:unbreaking"
+        },
+        "advancement_condition": {
+            "type": "gimm1q:condition",
+            "condition": {
+                "condition": "minecraft:random_chance",
+                "chance": 0.5
+            },
+            "if_true": 10.0,
+            "if_false": 5.0
+        },
+        "expression_condition": {
+            "type": "gimm1q:condition",
+            "condition": "2 > 0",
+            "if_true": 5.0,
+            "if_false": 10.0
+        },
+        "advancement_switch": {
+            "type": "gimm1q:switch",
+            "cases": [
+                {
+                    "condition": {
+                        "condition": "minecraft:weather_check",
+                        "raining": true
+                    },
+                    "result": 10.0
+                },
+                {
+                    "condition": {
+                        "condition": "minecraft:random_chance",
+                        "chance": 0.5
+                    },
+                    "result": 5.0
+                }
+            ],
+            "fallback": -1.0
+        },
+        "expression_switch": {
+            "type": "gimm1q:switch",
+            "cases": [
+                {
+                    "condition": "enchantment >= 3",
+                    "result": 30.0
+                },
+                {
+                    "condition": "enchantment >= 2",
+                    "result": 20.0
+                },
+                {
+                    "condition": "enchantment >= 1",
+                    "result": 10.0
+                }
+            ],
+            "fallback": -1.0
+        },
+        "thresholds": {
+            "type": "gimm1q:thresholds",
+            "value": "enchantment",
+            "thresholds": [
+                {
+                    "threshold": 1.0,
+                    "result": 10.0
+                },
+                {
+                    "threshold": 2.0,
+                    "result": 20.0
+                },
+                {
+                    "threshold": 3.0,
+                    "result": 30.0
+                }
+            ],
+            "fallback": -1.0
+        },
+        "holder_nbt": {
+            "type": "gimm1q:entity_nbt",
+            "entity": "holder",
+            "path": "Health"
+        },
+        "target_nbt": {
+            "type": "gimm1q:entity_nbt",
+            "entity": "target",
+            "path": "Health"
+        },
+        "holder_item_nbt": {
+            "type": "gimm1q:item_nbt",
+            "item": "holder",
+            "path": "Damage"
+        },
+        "target_item_nbt": {
+            "type": "gimm1q:item_nbt",
+            "item": "target",
+            "path": "Damage"
+        }
+    },
+    "values": {
+
+    }
+}

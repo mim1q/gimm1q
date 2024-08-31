@@ -15,12 +15,10 @@ import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
 import org.apache.commons.lang3.StringEscapeUtils;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class ValueCalculatorResourceReloader implements SimpleSynchronousResourceReloadListener {
     private ValueCalculatorResourceReloader() {
@@ -92,13 +90,19 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
 
     private void saveTemplatesToConfigFolder(Map<Identifier, String> idsToStrings) {
         try {
-            var configFolder = FabricLoader.getInstance().getConfigDir().resolve("gimm1q/value_calculator_overrides").toFile();
-            if (configFolder.mkdirs()) {
-                Gimm1q.LOGGER.info("Created Gimm1q Value Calculator config folder {}", configFolder.getAbsolutePath());
+            var configFolder = FabricLoader.getInstance().getConfigDir().toFile();
+
+            var namespaces = idsToStrings.keySet().stream().map(Identifier::getNamespace).collect(Collectors.toSet());
+            for (var ns : namespaces) {
+                var directory = configFolder.toPath().resolve(ns + "/value_calculators").toFile();
+                if (directory.exists()) {
+                    deleteExistingTemplateFiles(directory);
+                }
             }
 
             for (var id : idsToStrings.keySet()) {
-                var directory = configFolder.toPath().resolve(id.getNamespace()).toFile();
+                var directory = configFolder.toPath().resolve(id.getNamespace() + "/value_calculators").toFile();
+
                 var file = directory.toPath().resolve(id.getPath() + ".template.json").toFile();
                 if (file.getParentFile().mkdirs() || file.createNewFile()) {
                     Gimm1q.LOGGER.info("Created Gimm1q Value Calculator config file {}", file.getAbsolutePath());
@@ -110,6 +114,22 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
             }
         } catch (Throwable e) {
             Gimm1q.LOGGER.error("Failed to create Gimm1q Value Calculator config folder", e);
+        }
+    }
+
+    private static void deleteExistingTemplateFiles(File directory) {
+        var files = directory.listFiles();
+
+        if (files != null) {
+            for (var file : files) {
+                if (file.isFile() && file.getName().endsWith(".template.json")) {
+                    if (!file.delete()) {
+                        Gimm1q.LOGGER.error("Failed to delete Gimm1q Value Calculator config file {}", file.getAbsolutePath());
+                    }
+                } else if (file.isDirectory()) {
+                    deleteExistingTemplateFiles(file);
+                }
+            }
         }
     }
 

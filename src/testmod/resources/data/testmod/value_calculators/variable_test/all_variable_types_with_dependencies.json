@@ -1,0 +1,88 @@
+{
+    "variables": {
+        "constant": 1.0,
+        "attribute": {
+            "type": "gimm1q:attribute",
+            "attribute": "generic.movement_speed",
+            "fallback": "constant"
+        },
+        "enchantment": {
+            "type": "gimm1q:enchantment",
+            "enchantment": "minecraft:unbreaking"
+        },
+        "advancement_condition": {
+            "type": "gimm1q:condition",
+            "condition": {
+                "condition": "minecraft:random_chance",
+                "chance": 0.5
+            },
+            "if_true": "attribute",
+            "if_false": "attribute + 1"
+        },
+        "expression_condition": {
+            "type": "gimm1q:condition",
+            "condition": "2 > 0",
+            "if_true": "advancement_condition",
+            "if_false": "advancement_condition * 2 + 1"
+        },
+        "advancement_switch": {
+            "type": "gimm1q:switch",
+            "cases": [
+                {
+                    "condition": {
+                        "condition": "minecraft:weather_check",
+                        "raining": true
+                    },
+                    "result": "expression_condition * 10"
+                },
+                {
+                    "condition": {
+                        "condition": "minecraft:random_chance",
+                        "chance": 0.5
+                    },
+                    "result": "expression_condition"
+                }
+            ],
+            "fallback": "expression_condition * 0.1"
+        },
+        "expression_switch": {
+            "type": "gimm1q:switch",
+            "cases": [
+                {
+                    "condition": "enchantment >= 3",
+                    "result": "holder_nbt * 3"
+                },
+                {
+                    "condition": "enchantment >= 2",
+                    "result": "holder_nbt * 2"
+                },
+                {
+                    "condition": "enchantment >= 1",
+                    "result": "holder_nbt * 1"
+                }
+            ],
+            "fallback": "advancement_switch * -1"
+        },
+        "thresholds": {
+            "type": "gimm1q:thresholds",
+            "value": "enchantment",
+            "thresholds": [
+                {
+                    "threshold": 1.0,
+                    "result": "advancement_switch"
+                },
+                {
+                    "threshold": 2.0,
+                    "result": "advancement_switch * 2"
+                },
+                {
+                    "threshold": 3.0,
+                    "result": "advancement_switch * 3"
+                }
+            ],
+            "fallback": "advancement_switch * -1"
+        }
+    },
+    "values": {
+    }
+}

@@ -131,25 +131,29 @@ public class Gimm1qCommands {
         var builder = new StringBuilder();
 
         for (var id : ids) {
-            builder.append("## `").append(id).append("`\n");
+            try {
+                builder.append("## `").append(id).append("`\n");
 
-            var variables = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, true).orElseThrow();
-            builder.append("### Variables:\n");
-            builder.append("| name | average time (ms) | value |").append("\n");
-            builder.append("|-|-|-|").append("\n");
-            for (var variable : variables) {
-                addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, variable, true);
-            }
-            builder.append("\n");
+                var variables = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, true).orElseThrow();
+                builder.append("### Variables:\n");
+                builder.append("| name | average time (ms) | value |").append("\n");
+                builder.append("|-|-|-|").append("\n");
+                for (var variable : variables) {
+                    addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, variable, true);
+                }
+                builder.append("\n");
 
-            builder.append("### Expressions:\n");
-            builder.append("| name | average time (ms) | value |").append("\n");
-            builder.append("|-|-|-|").append("\n");
-            var expressions = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, false).orElseThrow();
-            for (var expression : expressions) {
-                addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, expression, false);
+                builder.append("### Expressions:\n");
+                builder.append("| name | average time (ms) | value |").append("\n");
+                builder.append("|-|-|-|").append("\n");
+                var expressions = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, false).orElseThrow();
+                for (var expression : expressions) {
+                    addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, expression, false);
+                }
+                builder.append("\n---\n");
+            } catch (Exception e) {
+                Gimm1q.LOGGER.error("Failed to dump value calculator: {}", id, e);
             }
-            builder.append("\n---\n");
         }
 
         var relativePath = "logs/gimm1q/" + filename + ".md";
