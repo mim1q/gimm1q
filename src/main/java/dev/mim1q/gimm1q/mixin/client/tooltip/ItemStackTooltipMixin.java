@@ -69,7 +69,6 @@ public abstract class ItemStackTooltipMixin {
             currentTooltip = gimm1q$tooltipsToAdd;
         } else {
             currentTooltip = new ArrayList<>();
-            System.out.println("resolving");
 
             gimm1q$hiddenTooltipSections = new ArrayList<>();
             tooltipResolver.resolve(

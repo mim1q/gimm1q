@@ -66,17 +66,19 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
                             var json = JsonParser.parseReader(new InputStreamReader(input.get()));
                             var internal = ValueCalculatorInternal.CODEC
                                 .parse(JsonOps.INSTANCE, json)
-                                .result();
+                                .getOrThrow(false, e -> {
+                                    Gimm1q.LOGGER.error("Failed to parse value calculator: {}, {}", newId, e);
+                                    throw new RuntimeException(e);
+                                });
 
-                            internal.ifPresent(
-                                it -> {
-                                    map.computeIfAbsent(newId, k -> new ArrayList<>()).add(it);
-                                    idsToStrings.putIfAbsent(newId, GSON.toJson(json));
-                                }
-                            );
+                            map.computeIfAbsent(newId, k -> new ArrayList<>()).add(internal);
+                            idsToStrings.putIfAbsent(newId, GSON.toJson(json));
+
                         } catch (IOException e) {
+                            Gimm1q.LOGGER.error("Failed to load value calculator: {}", newId, e);
                             throw new RuntimeException(e);
-                        } catch (IllegalStateException e) {
+                        } catch (Exception e) {
+                            Gimm1q.LOGGER.error("Failed to create value calculator: {}", newId, e);
                             throw new RuntimeException("Failed to create value calculator: " + newId, e);
                         }
                     }
@@ -97,7 +99,7 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
             for (var id : idsToStrings.keySet()) {
                 var directory = configFolder.toPath().resolve(id.getNamespace()).toFile();
                 var file = directory.toPath().resolve(id.getPath() + ".template.json").toFile();
-                if (directory.mkdirs() || directory.createNewFile()) {
+                if (file.getParentFile().mkdirs() || file.createNewFile()) {
                     Gimm1q.LOGGER.info("Created Gimm1q Value Calculator config file {}", file.getAbsolutePath());
                 }
                 var writer = new FileWriter(file, false);

@@ -1,6 +1,5 @@
 package dev.mim1q.gimm1q;
 
-import com.google.common.collect.Lists;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
@@ -10,12 +9,13 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.command.argument.IdentifierArgumentType;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.nio.file.Files;
-import java.util.List;
+import java.util.function.Consumer;
 
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
@@ -102,62 +102,76 @@ public class Gimm1qCommands {
                                 var target = EntityArgumentType.getEntity(context, "target");
                                 var count = IntegerArgumentType.getInteger(context, "count");
 
-                                var ids = ValueCalculatorResourceReloader.getAllIds();
-                                var builder = new StringBuilder();
-
-                                for (var id : ids) {
-                                    builder.append("## `").append(id).append("`\n");
-
-                                    var variables = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, true).orElseThrow();
-                                    builder.append("### Variables:\n");
-                                    builder.append("| name | average time (ms) | value |").append("\n");
-                                    builder.append("|-|-|-|").append("\n");
-                                    for (var variable : variables) {
-                                        addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, variable, true);
-                                    }
-                                    builder.append("\n");
-
-                                    builder.append("### Expressions:\n");
-                                    builder.append("| name | average time (ms) | value |").append("\n");
-                                    builder.append("|-|-|-|").append("\n");
-                                    var expressions = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, false).orElseThrow();
-                                    for (var expression : expressions) {
-                                        addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, expression, false);
-                                    }
-                                    builder.append("\n---\n");
-                                }
-
-                                var filename = "logs/gimm1q/value_calculator_dump.md";
-
-                                context.getSource().sendFeedback(
-                                    () -> Text.literal("Result dumped to file " + filename),
-                                    true
+                                return applyDumpCommand(
+                                    holder,
+                                    target,
+                                    count,
+                                    it -> context.getSource().sendFeedback(() -> it, true),
+                                    it -> context.getSource().sendError(it),
+                                    "value_calculators_dump"
                                 );
-
-                                try {
-                                    var path = FabricLoader.getInstance().getGameDir();
-                                    var file = path.resolve(filename);
-
-                                    Files.createDirectories(file.getParent());
-                                    if (!Files.exists(file)) {
-                                        Files.createFile(file);
-                                    }
-                                    Files.writeString(file, builder.toString());
-
-                                } catch (Exception e) {
-                                    context.getSource().sendError(
-                                        Text.literal("Failed to save file: " + e.getMessage())
-                                    );
-                                    return 1;
-                                }
-
-                                return 0;
                             })
                         )
                     )
                 )
             )
         );
+    }
+
+    public static int applyDumpCommand(
+        Entity holder,
+        Entity target,
+        int count,
+        Consumer<Text> feedbackSender,
+        Consumer<Text> errorSender,
+        String filename
+    ) {
+
+        var ids = ValueCalculatorResourceReloader.getAllIds();
+        var builder = new StringBuilder();
+
+        for (var id : ids) {
+            builder.append("## `").append(id).append("`\n");
+
+            var variables = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, true).orElseThrow();
+            builder.append("### Variables:\n");
+            builder.append("| name | average time (ms) | value |").append("\n");
+            builder.append("|-|-|-|").append("\n");
+            for (var variable : variables) {
+                addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, variable, true);
+            }
+            builder.append("\n");
+
+            builder.append("### Expressions:\n");
+            builder.append("| name | average time (ms) | value |").append("\n");
+            builder.append("|-|-|-|").append("\n");
+            var expressions = ValueCalculatorResourceReloader.getExpressionOrVariableNames(id, false).orElseThrow();
+            for (var expression : expressions) {
+                addResultsToBuilder(builder, id, count, (LivingEntity) target, (LivingEntity) holder, expression, false);
+            }
+            builder.append("\n---\n");
+        }
+
+        var relativePath = "logs/gimm1q/" + filename + ".md";
+
+        feedbackSender.accept(Text.literal("Result dumped to file " + relativePath));
+
+        try {
+            var path = FabricLoader.getInstance().getGameDir();
+            var file = path.resolve(relativePath);
+
+            Files.createDirectories(file.getParent());
+            if (!Files.exists(file)) {
+                Files.createFile(file);
+            }
+            Files.writeString(file, builder.toString());
+
+        } catch (Exception e) {
+            errorSender.accept(Text.literal("Failed to save file: " + e.getMessage()));
+            return 1;
+        }
+
+        return 0;
     }
 
     private static void addResultsToBuilder(StringBuilder builder, Identifier id, int count, LivingEntity target, LivingEntity holder, String name, boolean variable) {

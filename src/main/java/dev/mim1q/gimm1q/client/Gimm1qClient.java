@@ -18,6 +18,7 @@ public class Gimm1qClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         Gimm1qClientNetworkHandler.init();
+        Gimm1qClientCommands.init();
 
         WorldRenderEvents.AFTER_ENTITIES.register((context) -> {
             var player = MinecraftClient.getInstance().player;
