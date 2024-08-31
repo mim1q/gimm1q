@@ -13,6 +13,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -103,7 +104,8 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
                     Gimm1q.LOGGER.info("Created Gimm1q Value Calculator config file {}", file.getAbsolutePath());
                 }
                 var writer = new FileWriter(file, false);
-                writer.write(idsToStrings.get(id));
+                //noinspection deprecation
+                writer.write(StringEscapeUtils.unescapeJson(idsToStrings.get(id)));
                 writer.close();
             }
         } catch (Throwable e) {

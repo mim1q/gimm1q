@@ -180,7 +180,7 @@ public final class VariableSourceTypes {
      *                      "threshold": 1.0,
      *                      "result": 0.0
      *                  }
-     *             ]
+     *             ],
      *             "fallback": 10.0
      *         }
      *     }
@@ -498,7 +498,8 @@ public final class VariableSourceTypes {
         @Override
         public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
             var value = this.value.evaluate(context, previousVariables);
-            for (var currentThreshold : thresholds) {
+            for (int i = thresholds.size() - 1; i >= 0; i--) {
+                var currentThreshold = thresholds.get(i);
                 if (value >= currentThreshold.threshold) {
                     return currentThreshold.result.evaluate(context, previousVariables);
                 }
