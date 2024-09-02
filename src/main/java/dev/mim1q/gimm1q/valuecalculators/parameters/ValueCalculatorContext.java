@@ -57,6 +57,7 @@ public final class ValueCalculatorContext {
      * @return this context
      */
     public <T> ValueCalculatorContext with(ValueCalculatorParameter<T> parameter, T value) {
+        if (value == null) return this;
         parameters.put(parameter, value);
         return this;
     }

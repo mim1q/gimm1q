@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.network.s2c.ValueCalculatorSyncS2CPacket;
+import dev.mim1q.gimm1q.valuecalculators.ValueCalculatorsReloadedCallback;
 import dev.mim1q.gimm1q.valuecalculators.internal.ValueCalculatorInternal;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
@@ -42,11 +43,13 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         var idsToStrings = loadFromDataPacks(manager);
         saveTemplatesToConfigFolder(idsToStrings);
         loadFromConfigFolder(idsToStrings.keySet());
+        ValueCalculatorsReloadedCallback.EVENT.invoker().onValueCalculatorsReloaded(map.keySet());
     }
 
     public void replaceWith(Map<Identifier, List<ValueCalculatorInternal>> map) {
         this.map.clear();
         this.map.putAll(map);
+        ValueCalculatorsReloadedCallback.EVENT.invoker().onValueCalculatorsReloaded(map.keySet());
     }
 
     private Map<Identifier, String> loadFromDataPacks(ResourceManager manager) {
@@ -164,7 +167,9 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
     ) {
         var list = map.get(id);
         if (list == null) {
-            Gimm1q.LOGGER.error("Value Calculator file not found: {}. Defaulting to 0.0", id);
+            if (Gimm1q.debugMessages) {
+                Gimm1q.LOGGER.error("Value Calculator file not found: {}. Defaulting to 0.0", id);
+            }
             return Optional.empty();
         }
 
@@ -177,8 +182,9 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
                 return exp;
             }
         }
-
-        Gimm1q.LOGGER.error("Value Calculator expression or variable not found: {}.{}. Defaulting to 0.0", id, name);
+        if (Gimm1q.debugMessages) {
+            Gimm1q.LOGGER.error("Value Calculator expression or variable not found: {}.{}. Defaulting to 0.0", id, name);
+        }
         return Optional.empty();
     }
 
