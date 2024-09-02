@@ -1,0 +1,15 @@
+{
+    "variables": {
+        "existing_attribute": {
+            "type": "gimm1q:attribute",
+            "attribute": "generic.movement_speed"
+        },
+        "missing_attribute": {
+            "type": "gimm1q:attribute",
+            "attribute": "missing_id:nonexistent"
+        }
+    },
+    "values": {
+        "test": "missing_attribute + existing_attribute"
+    }
+}

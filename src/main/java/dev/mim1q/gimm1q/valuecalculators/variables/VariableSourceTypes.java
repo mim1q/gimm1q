@@ -247,12 +247,13 @@ public final class VariableSourceTypes {
     }
 
     private record Attribute(
-        EntityAttribute attribute,
+        Optional<EntityAttribute> attribute,
         EntitySelector selector,
         double fallback
     ) implements VariableSource {
         public static final Codec<Attribute> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Registries.ATTRIBUTE.getCodec()
+            Registries.ATTRIBUTE.getCodec().xmap(Optional::ofNullable, Optional::get)
+                .orElse(Optional.empty())
                 .fieldOf("attribute")
                 .forGetter(Attribute::attribute),
             StringIdentifiable.createCodec(EntitySelector::values)
@@ -266,11 +267,12 @@ public final class VariableSourceTypes {
         @Override
         public double evaluate(ValueCalculatorContext context, Map<String, Double> previousVariables) {
             var parameter = selector.parameter;
+            if (attribute.isEmpty()) return fallback;
 
             return context.mapOrDefault(
                 parameter,
-                value -> value.getAttributes().hasAttribute(attribute)
-                    ? value.getAttributeValue(attribute)
+                value -> value.getAttributes().hasAttribute(attribute.get())
+                    ? value.getAttributeValue(attribute.get())
                     : fallback,
                 0.0
             );
