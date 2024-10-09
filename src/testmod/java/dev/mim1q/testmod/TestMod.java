@@ -64,7 +64,8 @@ public class TestMod implements ModInitializer {
 
             var context = ValueCalculatorContext.create()
                 .with(ValueCalculatorParameter.HOLDER, user)
-                .with(ValueCalculatorParameter.TARGET, user);
+                .with(ValueCalculatorParameter.TARGET, user)
+                .withVariable("override", user.isSneaking() ? 0.0 : 1.0);
 
             if (user.isSneaking()) {
                 if (world.isClient) {

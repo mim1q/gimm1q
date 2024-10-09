@@ -31,6 +31,6 @@
     },
 
     "equations": {
-        "stick": "power + rng * b"
+        "stick": "override * (power + rng * b)"
     }
 }

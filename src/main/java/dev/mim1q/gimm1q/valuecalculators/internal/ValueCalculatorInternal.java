@@ -73,7 +73,10 @@ public class ValueCalculatorInternal {
         }
 
         var overrideVariable = context.getVariableOverride(name);
-        if (overrideVariable.isPresent()) return overrideVariable;
+        if (overrideVariable.isPresent()) {
+            variableCache.getOrDefault(context, new HashMap<>()).put(name, overrideVariable.get());
+            return overrideVariable;
+        }
 
         var cached = variableCache.getOrDefault(context, new HashMap<>());
         if (cached.containsKey(name)) return Optional.of(cached.get(name));
@@ -162,7 +165,7 @@ public class ValueCalculatorInternal {
         CompiledExpression internalExpression,
         String[] potentialVariables
     ) {
-        private static final Pattern REGEX = Pattern.compile("[a-z_]+\\(?");
+        private static final Pattern REGEX = Pattern.compile("[a-zA-Z_]+\\(?");
 
         public static WrappedExpression of(String string) {
 
