@@ -83,6 +83,6 @@
             "fallback": "advancement_switch * -1"
         }
     },
-    "values": {
+    "equations": {
     }
 }

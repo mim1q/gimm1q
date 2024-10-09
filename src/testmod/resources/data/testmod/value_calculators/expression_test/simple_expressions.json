@@ -4,7 +4,7 @@
         "b": 2.0,
         "c": 3.0
     },
-    "values": {
+    "equations": {
         "constant": 1.0,
         "constant_string": "1.0",
         "constant_equation": "(0.5 * 30 + 15) / (60.1 * 0.3333)",

@@ -30,7 +30,7 @@
         "health_percentage": "current_health / max_health"
     },
 
-    "values": {
+    "equations": {
         "stick": "power + rng * b"
     }
 }

@@ -9,7 +9,7 @@
             "attribute": "missing_id:nonexistent"
         }
     },
-    "values": {
+    "equations": {
         "test": "missing_attribute + existing_attribute"
     }
 }

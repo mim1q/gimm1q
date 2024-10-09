@@ -4,7 +4,7 @@
         "should_be_1": "2",
         "should_be_2": "3"
     },
-    "values": {
+    "equations": {
         "value_should_be_0": "1",
         "value_should_be_1": "2",
         "value_should_be_2": "3"

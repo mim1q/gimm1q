@@ -104,7 +104,7 @@
             "path": "Damage"
         }
     },
-    "values": {
+    "equations": {
 
     }
 }

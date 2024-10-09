@@ -58,7 +58,7 @@ public class ValueCalculatorInternal {
             .fieldOf("variables")
             .forGetter(it -> it.variables),
         Codec.unboundedMap(Codec.STRING, Codec.either(EXPRESSION_BUILDER_CODEC, Codec.DOUBLE))
-            .fieldOf("values")
+            .fieldOf("equations")
             .forGetter(it -> it.expressions)
     ).apply(instance, ValueCalculatorInternal::new));
 

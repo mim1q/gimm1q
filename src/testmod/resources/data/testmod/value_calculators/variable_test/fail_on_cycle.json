@@ -7,7 +7,7 @@
         "e_should_fail": "d",
         "f_should_fail": "e"
     },
-    "values": {
+    "equations": {
         "should_fail": "a_should_fail + e_should_fail"
     }
 }
