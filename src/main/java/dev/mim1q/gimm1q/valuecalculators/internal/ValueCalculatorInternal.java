@@ -71,6 +71,10 @@ public class ValueCalculatorInternal {
             Gimm1q.LOGGER.error("Value Calculator dependency cycle detected in variable: {}", name);
             return Optional.empty();
         }
+
+        var overrideVariable = context.getVariableOverride(name);
+        if (overrideVariable.isPresent()) return overrideVariable;
+
         var cached = variableCache.getOrDefault(context, new HashMap<>());
         if (cached.containsKey(name)) return Optional.of(cached.get(name));
 

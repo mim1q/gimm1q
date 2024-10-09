@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -15,6 +16,7 @@ public final class ValueCalculatorContext {
     }
 
     private final Map<ValueCalculatorParameter<?>, Object> parameters = new HashMap<>();
+    private final Map<String, Double> overrideVariables = new HashMap<>();
 
     /**
      * Gets the value of a parameter
@@ -60,6 +62,15 @@ public final class ValueCalculatorContext {
         if (value == null) return this;
         parameters.put(parameter, value);
         return this;
+    }
+
+    public ValueCalculatorContext withVariable(String name, double value) {
+        overrideVariables.put(name, value);
+        return this;
+    }
+
+    public Optional<Double> getVariableOverride(String name) {
+        return Optional.ofNullable(overrideVariables.get(name));
     }
 
     @Override
