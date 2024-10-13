@@ -11,7 +11,6 @@ import net.minecraft.util.math.random.Random;
 import org.jetbrains.annotations.ApiStatus;
 import redempt.crunch.CompiledExpression;
 import redempt.crunch.Crunch;
-import redempt.crunch.functional.ExpressionEnv;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -179,7 +178,7 @@ public class ValueCalculatorInternal {
             var variables = potentialVariables.stream().distinct().toArray(String[]::new);
             return new WrappedExpression(
                 string,
-                Crunch.compileExpression(string, new ExpressionEnv().setVariableNames(variables)),
+                Crunch.compileExpression(string, ExpressionEnvUtils.createEnvWithFunctions(variables)),
                 variables
             );
         }

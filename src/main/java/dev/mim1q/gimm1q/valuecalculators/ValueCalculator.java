@@ -4,20 +4,23 @@ import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import net.minecraft.util.Identifier;
 
+import java.util.function.Function;
+
 /**
  * A convenient way to retrieve a value of an expression defined in the Value Calculator data.
  *
  * @param id       the identifier of the value calculator file
  * @param name     the name of the value inside the <code>values</code> map in the json file
- * @param fallback the fallback value if the expression is not found
+ * @param fallback the fallback calculated if the expression is not found
  */
 public record ValueCalculator(
     Identifier id,
     String name,
-    Double fallback
+    Function<ValueCalculatorContext, Double> fallback
 ) {
     public double calculate(ValueCalculatorContext context) {
-        return ValueCalculatorResourceReloader.INSTANCE.calculateExpression(id, name, context).orElse(fallback);
+        return ValueCalculatorResourceReloader.INSTANCE.calculateExpression(id, name, context)
+            .orElse(fallback.apply(context));
     }
 
     public double calculate() {
@@ -29,6 +32,10 @@ public record ValueCalculator(
     }
 
     public static ValueCalculator of(Identifier id, String name, double fallback) {
+        return new ValueCalculator(id, name, context -> fallback);
+    }
+
+    public static ValueCalculator of(Identifier id, String name, Function<ValueCalculatorContext, Double> fallback) {
         return new ValueCalculator(id, name, fallback);
     }
 }
