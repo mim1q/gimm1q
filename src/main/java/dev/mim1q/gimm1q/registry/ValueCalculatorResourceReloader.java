@@ -41,7 +41,10 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         map.clear();
 
         var idsToStrings = loadFromDataPacks(manager);
-        saveTemplatesToConfigFolder(idsToStrings);
+        var templateCount = saveTemplatesToConfigFolder(idsToStrings);
+
+        Gimm1q.LOGGER.info("Saved {} Value Calculator templates to config folder", templateCount);
+
         loadFromConfigFolder(idsToStrings.keySet());
         ValueCalculatorsReloadedCallback.EVENT.invoker().onValueCalculatorsReloaded(map.keySet());
     }
@@ -91,7 +94,8 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         return idsToStrings;
     }
 
-    private void saveTemplatesToConfigFolder(Map<Identifier, String> idsToStrings) {
+    private int saveTemplatesToConfigFolder(Map<Identifier, String> idsToStrings) {
+        var count = 0;
         try {
             var configFolder = FabricLoader.getInstance().getConfigDir().toFile();
 
@@ -108,7 +112,8 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
 
                 var file = directory.toPath().resolve(id.getPath() + ".template.json").toFile();
                 if (file.getParentFile().mkdirs() || file.createNewFile()) {
-                    Gimm1q.LOGGER.info("Created Gimm1q Value Calculator config file {}", file.getAbsolutePath());
+                    count++;
+                    Gimm1q.LOGGER.debug("Created Gimm1q Value Calculator config file {}", file.getAbsolutePath());
                 }
                 var writer = new FileWriter(file, false);
                 //noinspection deprecation
@@ -118,6 +123,8 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
         } catch (Throwable e) {
             Gimm1q.LOGGER.error("Failed to create Gimm1q Value Calculator config folder", e);
         }
+
+        return count;
     }
 
     private static void deleteExistingTemplateFiles(File directory) {
@@ -138,13 +145,13 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
 
     private void loadFromConfigFolder(Set<Identifier> ids) {
         try {
-            var configFolder = FabricLoader.getInstance().getConfigDir().resolve("gimm1q/value_calculator_overrides").toFile();
+            var configFolder = FabricLoader.getInstance().getConfigDir().toFile();
             if (!configFolder.exists()) {
                 return;
             }
 
             for (var id : ids) {
-                var file = configFolder.toPath().resolve(id.getNamespace() + "/" + id.getPath() + ".json").toFile();
+                var file = configFolder.toPath().resolve(id.getNamespace() + "/value_calculators/" + id.getPath() + ".json").toFile();
                 if (!file.exists()) {
                     continue;
                 }
