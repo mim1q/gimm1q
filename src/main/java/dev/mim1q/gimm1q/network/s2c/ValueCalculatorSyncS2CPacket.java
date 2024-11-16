@@ -20,15 +20,24 @@ public class ValueCalculatorSyncS2CPacket extends PacketByteBuf {
 
         for (var entry : map.entrySet()) {
             writeIdentifier(entry.getKey());
-            writeInt(entry.getValue().size());
+            var nbts = new ArrayList<NbtCompound>();
 
             for (ValueCalculatorInternal calculator : entry.getValue()) {
-                writeNbt((NbtCompound) ValueCalculatorInternal.CODEC
-                    .encode(calculator, NbtOps.INSTANCE, new NbtCompound())
-                    .getOrThrow(true, e -> {
-                        Gimm1q.LOGGER.error("Failed to encode Value Calculator {} to send to client. {}", entry.getKey(), e);
-                    })
-                );
+                try {
+                    nbts.add((NbtCompound) ValueCalculatorInternal.CODEC
+                        .encodeStart(NbtOps.INSTANCE, calculator)
+                        .getOrThrow(true, e -> {
+                            Gimm1q.LOGGER.error("Failed to encode Value Calculator {} to send to client. {}", entry.getKey(), e);
+                        })
+                    );
+                } catch (Exception e) {
+                    Gimm1q.LOGGER.warn("Failed to encode Value Calculator {} to send to client. {}", entry.getKey(), e);
+                }
+            }
+
+            writeInt(nbts.size());
+            for (NbtCompound nbt : nbts) {
+                writeNbt(nbt);
             }
         }
     }
@@ -43,8 +52,10 @@ public class ValueCalculatorSyncS2CPacket extends PacketByteBuf {
 
             var list = new ArrayList<ValueCalculatorInternal>();
             for (int j = 0; j < listSize; ++j) {
+                var nbt = buffer.readNbt();
+                if (nbt == null) continue;
                 list.add(ValueCalculatorInternal.CODEC
-                    .parse(NbtOps.INSTANCE, buffer.readNbt())
+                    .parse(NbtOps.INSTANCE, nbt)
                     .result()
                     .orElseThrow(() -> new IllegalStateException("Failed to decode Value Calculator from client."))
                 );

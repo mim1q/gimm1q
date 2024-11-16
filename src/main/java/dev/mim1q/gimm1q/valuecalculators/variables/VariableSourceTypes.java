@@ -252,9 +252,9 @@ public final class VariableSourceTypes {
         double fallback
     ) implements VariableSource {
         public static final Codec<Attribute> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Registries.ATTRIBUTE.getCodec().xmap(Optional::ofNullable, Optional::get)
+            Registries.ATTRIBUTE.getCodec()
+                .optionalFieldOf("attribute")
                 .orElse(Optional.empty())
-                .fieldOf("attribute")
                 .forGetter(Attribute::attribute),
             StringIdentifiable.createCodec(EntitySelector::values)
                 .optionalFieldOf("selector", EntitySelector.THIS)
