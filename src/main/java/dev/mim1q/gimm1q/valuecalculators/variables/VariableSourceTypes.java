@@ -33,6 +33,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static dev.mim1q.gimm1q.util.Gimm1qCodecUtil.createIdentifierToRegistryCodec;
+
 /**
  * This class contains some basic types of {@link VariableSource}s with examples on how to implement them
  */
@@ -252,7 +254,7 @@ public final class VariableSourceTypes {
         double fallback
     ) implements VariableSource {
         public static final Codec<Attribute> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Registries.ATTRIBUTE.getCodec()
+            createIdentifierToRegistryCodec(Registries.ATTRIBUTE)
                 .optionalFieldOf("attribute")
                 .orElse(Optional.empty())
                 .forGetter(Attribute::attribute),
@@ -293,7 +295,7 @@ public final class VariableSourceTypes {
         net.minecraft.enchantment.Enchantment enchantment
     ) implements VariableSource {
         public static final Codec<Enchantment> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Registries.ENCHANTMENT.getCodec()
+            createIdentifierToRegistryCodec(Registries.ENCHANTMENT)
                 .fieldOf("enchantment")
                 .forGetter(Enchantment::enchantment)
         ).apply(instance, Enchantment::new));

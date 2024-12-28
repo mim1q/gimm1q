@@ -14,6 +14,7 @@ public class Gimm1qClientCommands {
     public static void init() {
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
             dispatcher.register(literal("gimm1q:dump_value_calculators_client")
+                .requires(source -> source.hasPermissionLevel(2))
                 .then(argument("count", IntegerArgumentType.integer())
                     .executes(context -> {
                         int count = IntegerArgumentType.getInteger(context, "count");
