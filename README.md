@@ -173,7 +173,7 @@ repositories {
 }
 
 dependencies {
-    modImplementation(include("com.github.mim1q:gimm1q:${Versions.GIMM1Q}")!!)
+    modImplementation(include("dev.mim1q:gimm1q::${Versions.GIMM1Q}")!!)
 }
 ```
 Replace `${Versions.GIMM1Q}` with the version you want to use. The available version can be found 
