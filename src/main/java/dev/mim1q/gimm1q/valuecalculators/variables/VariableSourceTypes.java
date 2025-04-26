@@ -26,7 +26,9 @@ import net.minecraft.nbt.AbstractNbtNumber;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.StringIdentifiable;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,6 +36,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static dev.mim1q.gimm1q.util.Gimm1qCodecUtil.createIdentifierToRegistryCodec;
+import static net.minecraft.component.DataComponentTypes.CUSTOM_DATA;
 
 /**
  * This class contains some basic types of {@link VariableSource}s with examples on how to implement them
@@ -255,7 +258,7 @@ public final class VariableSourceTypes {
     ) implements VariableSource {
         public static final Codec<Attribute> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             createIdentifierToRegistryCodec(Registries.ATTRIBUTE)
-                .optionalFieldOf("attribute")
+                .lenientOptionalFieldOf("attribute")
                 .orElse(Optional.empty())
                 .forGetter(Attribute::attribute),
             StringIdentifiable.createCodec(EntitySelector::values)
@@ -271,10 +274,11 @@ public final class VariableSourceTypes {
             var parameter = selector.parameter;
             if (attribute.isEmpty()) return fallback;
 
+            var attributeEntry = Registries.ATTRIBUTE.getEntry(attribute.get());
             return context.mapOrDefault(
                 parameter,
-                value -> value.getAttributes().hasAttribute(attribute.get())
-                    ? value.getAttributeValue(attribute.get())
+                value -> value.getAttributes().hasAttribute(attributeEntry)
+                    ? value.getAttributeValue(attributeEntry)
                     : fallback,
                 0.0
             );
@@ -292,12 +296,12 @@ public final class VariableSourceTypes {
     }
 
     private record Enchantment(
-        net.minecraft.enchantment.Enchantment enchantment
+        Identifier enchantmentId
     ) implements VariableSource {
         public static final Codec<Enchantment> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            createIdentifierToRegistryCodec(Registries.ENCHANTMENT)
+            Identifier.CODEC
                 .fieldOf("enchantment")
-                .forGetter(Enchantment::enchantment)
+                .forGetter(Enchantment::enchantmentId)
         ).apply(instance, Enchantment::new));
 
         @Override
@@ -312,7 +316,8 @@ public final class VariableSourceTypes {
                 )
             );
 
-            return EnchantmentHelper.getLevel(enchantment, stack);
+            var enchantmentEntry = context.get(ValueCalculatorParameter.HOLDER).getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(enchantmentId);
+            return EnchantmentHelper.getLevel(enchantmentEntry.get(), stack);
         }
 
         @Override
@@ -415,7 +420,7 @@ public final class VariableSourceTypes {
                     Map.of(),
                     (holder instanceof PlayerEntity player) ? player.getLuck() : 0f
                 )
-            ).build(null);
+            ).build(Optional.empty());
         }
     }
 
@@ -677,7 +682,8 @@ public final class VariableSourceTypes {
                 item = entity.getMainHandStack();
             }
 
-            return item.getNbt();
+            var nbt = item.get(CUSTOM_DATA);
+            return nbt == null ? new NbtCompound() : nbt.copyNbt();
         }
 
         @Override

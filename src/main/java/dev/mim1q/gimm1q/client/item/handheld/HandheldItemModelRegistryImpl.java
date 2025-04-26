@@ -22,7 +22,10 @@ public final class HandheldItemModelRegistryImpl implements HandheldItemModelReg
     public void register(Item item, Identifier modelId, Identifier handheldId) {
         var id = new ModelIdentifier(modelId, "inventory");
         var handheld = new ModelIdentifier(handheldId, "inventory");
-        ModelLoadingPlugin.register(context -> context.addModels(handheld, id));
+        ModelLoadingPlugin.register(context -> context.addModels(
+            handheldId.withPrefixedPath("item/"),
+            modelId.withPrefixedPath("item/")
+        ));
         MODELS.put(item, new Pair<>(id, handheld));
     }
 }

@@ -85,7 +85,7 @@
         },
         "holder_nbt": {
             "type": "gimm1q:entity_nbt",
-            "entity": "holder",
+            "entity": "this",
             "path": "Health"
         },
         "target_nbt": {
@@ -95,7 +95,7 @@
         },
         "holder_item_nbt": {
             "type": "gimm1q:item_nbt",
-            "item": "holder",
+            "item": "this",
             "path": "Damage"
         },
         "target_item_nbt": {

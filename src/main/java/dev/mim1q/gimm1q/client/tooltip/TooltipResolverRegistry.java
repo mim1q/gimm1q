@@ -1,6 +1,5 @@
 package dev.mim1q.gimm1q.client.tooltip;
 
-import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -67,13 +66,13 @@ public interface TooltipResolverRegistry {
          */
         TooltipHelper addLine(Text text, boolean extra);
 
-        /**
-         * Lets you hide default sections of the tooltip
-         *
-         * @param sections the sections to hide
-         * @return this
-         */
-        TooltipHelper hideSections(ItemStack.TooltipSection... sections);
+//        /**
+//         * Lets you hide default sections of the tooltip
+//         *
+//         * @param sections the sections to hide
+//         * @return this
+//         */
+//        TooltipHelper hideSections(ItemStack.TooltipSection... sections);
 
         /**
          * The default style to apply to text if it doesn't have a custom one
@@ -148,7 +147,7 @@ public interface TooltipResolverRegistry {
     record TooltipResolverContext(
         ItemStack item,
         PlayerEntity player,
-        TooltipContext tooltipContext
+        Item.TooltipContext tooltipContext
     ) {
     }
 }

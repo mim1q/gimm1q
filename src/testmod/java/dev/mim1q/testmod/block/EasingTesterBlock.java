@@ -1,5 +1,6 @@
 package dev.mim1q.testmod.block;
 
+import com.mojang.serialization.MapCodec;
 import dev.mim1q.gimm1q.interpolation.AnimatedProperty.EasingFunction;
 import dev.mim1q.gimm1q.interpolation.Easing;
 import net.minecraft.block.Block;
@@ -13,7 +14,6 @@ import net.minecraft.state.StateManager;
 import net.minecraft.state.property.EnumProperty;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
 import net.minecraft.util.StringIdentifiable;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -22,9 +22,15 @@ import org.jetbrains.annotations.Nullable;
 
 public class EasingTesterBlock extends BlockWithEntity {
     public static EnumProperty<EasingType> EASING_TYPE = EnumProperty.of("easing_type", EasingType.class);
+    public static MapCodec<EasingTesterBlock> CODEC = createCodec(EasingTesterBlock::new);
 
     public EasingTesterBlock(Settings settings) {
         super(settings.nonOpaque());
+    }
+
+    @Override
+    protected MapCodec<? extends BlockWithEntity> getCodec() {
+        return CODEC;
     }
 
     @Override
@@ -34,8 +40,7 @@ public class EasingTesterBlock extends BlockWithEntity {
     }
 
     @Override
-    @SuppressWarnings("deprecation")
-    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
+    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
         if (!world.isClient) {
             var easingOffset = player.isSneaking() ? -1 : 1;
             var nextEasingInt = state.get(EASING_TYPE).ordinal() + easingOffset;
@@ -88,5 +93,5 @@ public class EasingTesterBlock extends BlockWithEntity {
         public String asString() {
             return name;
         }
-        }
+    }
 }

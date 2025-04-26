@@ -7,16 +7,15 @@ import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry;
 import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry.TooltipHelper;
 import dev.mim1q.gimm1q.client.tooltip.TooltipResolverRegistry.TooltipResolverContext;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Pair;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -33,8 +32,8 @@ public abstract class ItemStackTooltipMixin {
     private static List<Pair<Text, Boolean>> gimm1q$tooltipsToAdd = List.of();
     @Unique
     private long gimm1q$lastTooltipTime = 0;
-    @Unique
-    private static List<ItemStack.TooltipSection> gimm1q$hiddenTooltipSections = List.of();
+    //    @Unique
+//    private static List<ItemStack.TooltipSection> gimm1q$hiddenTooltipSections = List.of();
     @Unique
     private static Style gimm1q$defaultStyle = Style.EMPTY;
 
@@ -46,17 +45,13 @@ public abstract class ItemStackTooltipMixin {
         at = @At("HEAD")
     )
     private void gimm1q$onGetTooltip(
-        @Nullable PlayerEntity player,
-        TooltipContext context,
-        CallbackInfoReturnable<List<Text>> cir,
-        @Share("tooltip") LocalRef<List<Text>> tooltip
+        Item.TooltipContext context, PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir, @Share("tooltip") LocalRef<List<Text>> tooltip
     ) {
         if (player == null) return;
         var thisItemStack = (ItemStack) (Object) this;
 
         var tooltipResolver = TooltipResolverRegistry.getInstance().getResolver(this.getItem());
         if (tooltipResolver == null) {
-            gimm1q$hiddenTooltipSections = List.of();
             return;
         }
 
@@ -70,7 +65,6 @@ public abstract class ItemStackTooltipMixin {
         } else {
             currentTooltip = new ArrayList<>();
 
-            gimm1q$hiddenTooltipSections = new ArrayList<>();
             tooltipResolver.resolve(
                 new TooltipResolverContext(
                     thisItemStack,
@@ -84,11 +78,11 @@ public abstract class ItemStackTooltipMixin {
                         return this;
                     }
 
-                    @Override
-                    public TooltipHelper hideSections(ItemStack.TooltipSection... sections) {
-                        gimm1q$hiddenTooltipSections.addAll(List.of(sections));
-                        return this;
-                    }
+//                    @Override
+//                    public TooltipHelper hideSections(ItemStack.TooltipSection... sections) {
+//                        gimm1q$hiddenTooltipSections.addAll(List.of(sections));
+//                        return this;
+//                    }
 
                     @Override
                     public TooltipHelper defaultStyle(Style style) {
@@ -148,34 +142,30 @@ public abstract class ItemStackTooltipMixin {
         method = "getTooltip",
         at = @At(
             value = "INVOKE",
-            target = "Lnet/minecraft/item/ItemStack;hasNbt()Z",
+            target = "net.minecraft.item.tooltip.TooltipType.isAdvanced()Z",
             ordinal = 0
         )
     )
     private void gimm1q$onGetTooltip2(
-        @Nullable PlayerEntity player,
-        TooltipContext context,
-        CallbackInfoReturnable<List<Text>> cir,
-        @Local(ordinal = 0) List<Text> list,
-        @Share("tooltip") LocalRef<List<Text>> tooltip
+        Item.TooltipContext context, PlayerEntity player, TooltipType type, CallbackInfoReturnable<List<Text>> cir, @Local(ordinal = 0) List<Text> list, @Share("tooltip") LocalRef<List<Text>> tooltip
     ) {
         var newTooltip = tooltip.get();
         if (newTooltip == null || newTooltip.isEmpty()) return;
         list.addAll(tooltip.get());
     }
 
-    @Inject(
-        method = "getHideFlags()I",
-        at = @At("RETURN"),
-        cancellable = true
-    )
-    private void gimm1q$onGetHideFlags(CallbackInfoReturnable<Integer> cir) {
-        if (gimm1q$hiddenTooltipSections.isEmpty()) return;
-
-        var result = cir.getReturnValue();
-        for (var section : gimm1q$hiddenTooltipSections) {
-            result |= section.getFlag();
-        }
-        cir.setReturnValue(result);
-    }
+//    @Inject(
+//        method = "getHideFlags()I",
+//        at = @At("RETURN"),
+//        cancellable = true
+//    )
+//    private void gimm1q$onGetHideFlags(CallbackInfoReturnable<Integer> cir) {
+//        if (gimm1q$hiddenTooltipSections.isEmpty()) return;
+//
+//        var result = cir.getReturnValue();
+//        for (var section : gimm1q$hiddenTooltipSections) {
+//            result |= section.getFlag();
+//        }
+//        cir.setReturnValue(result);
+//    }
 }

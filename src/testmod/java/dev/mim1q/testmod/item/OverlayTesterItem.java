@@ -3,22 +3,24 @@ package dev.mim1q.testmod.item;
 import dev.mim1q.gimm1q.Gimm1q;
 import dev.mim1q.gimm1q.client.render.overlay.ModelOverlayVertexConsumer;
 import dev.mim1q.gimm1q.client.render.overlay.OverlayUvMapper;
-import net.minecraft.client.item.TooltipContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 import static dev.mim1q.gimm1q.client.render.overlay.OverlayUvMapper.*;
+import static net.minecraft.component.DataComponentTypes.CUSTOM_DATA;
 
 public class OverlayTesterItem extends Item {
     // Important note:
@@ -36,21 +38,27 @@ public class OverlayTesterItem extends Item {
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         var stack = user.getStackInHand(hand);
-        var nbt = stack.getOrCreateNbt();
+        var nbtC = stack.get(CUSTOM_DATA);
+        var nbt = nbtC == null ? new NbtCompound() : nbtC.copyNbt();
+
         if (!nbt.contains("overlay")) {
             nbt.putInt("overlay", 0);
         } else {
             var newI = (nbt.getInt("overlay") + 1) % 8;
             nbt.putInt("overlay", newI);
             user.sendMessage(Text.literal(getOverlayName(newI)), true);
+
         }
+        stack.set(CUSTOM_DATA, NbtComponent.of(nbt));
         return TypedActionResult.success(stack);
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        super.appendTooltip(stack, world, tooltip, context);
-        int i = stack.getOrCreateNbt().getInt("overlay");
+    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+        super.appendTooltip(stack, context, tooltip, type);
+        var nbtC = stack.get(CUSTOM_DATA);
+        if (nbtC == null) return;
+        int i = nbtC.copyNbt().getInt("overlay");
         tooltip.add(Text.literal(getOverlayName(i)));
     }
 
@@ -68,17 +76,18 @@ public class OverlayTesterItem extends Item {
     }
 
     public static ModelOverlayVertexConsumer getVertexConsumer(VertexConsumerProvider vertexConsumers, ItemStack stack) {
-        int i = stack.getOrCreateNbt().getInt("overlay");
+        var nbtC = stack.get(CUSTOM_DATA);
+        if (nbtC == null) return null;
+        int i = nbtC.copyNbt().getInt("overlay");
 
         var consumer = switch (i) {
             case 1, 5, 6, 7 ->
-                vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(new Identifier("textures/block/stone.png")));
+                vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(Identifier.of("textures/block/stone.png")));
             case 2 ->
-                vertexConsumers.getBuffer(RenderLayer.getEntityCutout(new Identifier("textures/entity/zombie/zombie.png")));
-            case 3 ->
-                vertexConsumers.getBuffer(RenderLayer.getEyes(Gimm1q.id("textures/block/white.png")));
+                vertexConsumers.getBuffer(RenderLayer.getEntityCutout(Identifier.of("textures/entity/zombie/zombie.png")));
+            case 3 -> vertexConsumers.getBuffer(RenderLayer.getEyes(Gimm1q.id("textures/block/white.png")));
             case 4 ->
-                vertexConsumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(new Identifier("textures/block/prismarine.png")));
+                vertexConsumers.getBuffer(RenderLayer.getEntityTranslucentEmissive(Identifier.of("textures/block/prismarine.png")));
             default -> null;
         };
 

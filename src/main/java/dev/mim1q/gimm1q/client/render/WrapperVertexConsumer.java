@@ -13,7 +13,7 @@ public class WrapperVertexConsumer implements VertexConsumer {
     }
 
     @Override
-    public VertexConsumer vertex(double x, double y, double z) {
+    public VertexConsumer vertex(float x, float y, float z) {
         return wrapped.vertex(x, y, z);
     }
 
@@ -40,20 +40,5 @@ public class WrapperVertexConsumer implements VertexConsumer {
     @Override
     public VertexConsumer normal(float x, float y, float z) {
         return wrapped.normal(x, y, z);
-    }
-
-    @Override
-    public void next() {
-        wrapped.next();
-    }
-
-    @Override
-    public void fixedColor(int red, int green, int blue, int alpha) {
-        wrapped.fixedColor(red, green, blue, alpha);
-    }
-
-    @Override
-    public void unfixColor() {
-        wrapped.unfixColor();
     }
 }

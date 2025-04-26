@@ -1,6 +1,7 @@
 package dev.mim1q.gimm1q.screenshake;
 
 import dev.mim1q.gimm1q.network.s2c.CameraShakeS2CPacket;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
@@ -19,7 +20,7 @@ public class ScreenShakeUtils {
      * @see ScreenShakeModifiers
      */
     public static void applyShake(ServerPlayerEntity player, float intensity, int duration, String modifierName) {
-        new CameraShakeS2CPacket(intensity, duration, modifierName).send(player);
+        ServerPlayNetworking.send(player, new CameraShakeS2CPacket(intensity, duration, modifierName));
     }
 
     /**

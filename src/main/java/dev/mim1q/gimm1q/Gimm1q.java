@@ -1,6 +1,6 @@
 package dev.mim1q.gimm1q;
 
-import dev.mim1q.gimm1q.network.Gimm1qPacketIds;
+import dev.mim1q.gimm1q.network.Gimm1qServerNetworkHandler;
 import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;
 import net.fabricmc.api.EnvType;
@@ -38,14 +38,12 @@ public class Gimm1q implements ModInitializer {
         if (FabricLoader.getInstance().getEnvironmentType() == EnvType.SERVER) {
             ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
                 sender.sendPacket(
-                    Gimm1qPacketIds.SYNC_VALUE_CALCULATORS_S2C,
                     ValueCalculatorResourceReloader.INSTANCE.createPacket()
                 );
             });
             ServerLifecycleEvents.SYNC_DATA_PACK_CONTENTS.register((player, joined) -> {
                 ServerPlayNetworking.send(
                     player,
-                    Gimm1qPacketIds.SYNC_VALUE_CALCULATORS_S2C,
                     ValueCalculatorResourceReloader.INSTANCE.createPacket()
                 );
             });
@@ -53,9 +51,12 @@ public class Gimm1q implements ModInitializer {
 
         // Custom commands
         Gimm1qCommands.init();
+
+        // Networking
+        Gimm1qServerNetworkHandler.init();
     }
 
     public static Identifier id(String path) {
-        return new Identifier(ID, path);
+        return Identifier.of(ID, path);
     }
 }

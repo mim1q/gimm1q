@@ -13,8 +13,8 @@ import net.minecraft.util.Identifier;
  * <pre>{@code
  * HandheldItemModelRegistry.getInstance().register(
  *     SOME_ITEM,
- *     new Identifier("modid", "gui/some_item"),
- *     new Identifier("modid", "handheld/some_item")
+ *     Identifier.of("modid", "gui/some_item"),
+ *     Identifier.of("modid", "handheld/some_item")
  * );
  * }</pre>
  * <p>
@@ -40,7 +40,7 @@ public interface HandheldItemModelRegistry {
      */
     default void register(Item item) {
         var itemId = Registries.ITEM.getId(item);
-        var handheldId = new Identifier(itemId.getNamespace(), itemId.getPath() + "_handheld");
+        var handheldId = Identifier.of(itemId.getNamespace(), itemId.getPath() + "_handheld");
         register(item, itemId, handheldId);
     }
 

@@ -68,7 +68,7 @@ public class ModelOverlayFeatureRenderer<E extends LivingEntity, M extends Entit
         }
 
         if (consumer == null) return;
-        getContextModel().render(matrices, consumer, light, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f);
+        getContextModel().render(matrices, consumer, light, OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
     }
 
     public static <E extends LivingEntity, M extends EntityModel<E>>

@@ -13,17 +13,18 @@ import dev.mim1q.testmod.block.ThumperBlock;
 import dev.mim1q.testmod.item.OverlayTesterItem;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
+import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.client.item.TooltipContext;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.*;
+import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.text.Style;
@@ -35,10 +36,10 @@ import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
+import static net.minecraft.component.DataComponentTypes.CUSTOM_DATA;
 import static net.minecraft.server.command.CommandManager.argument;
 import static net.minecraft.server.command.CommandManager.literal;
 
@@ -46,19 +47,19 @@ public class TestMod implements ModInitializer {
     public static final String ID = "testmod";
     public static final Logger LOGGER = LogManager.getLogger(ID);
 
-    public static final ThumperBlock THUMPER_BLOCK = registerBlock("thumper", new ThumperBlock(FabricBlockSettings.copyOf(Blocks.STONE)));
-    public static final Item HIGHLIGHT_STICK = registerItem("highlight_stick", new Item(new FabricItemSettings()));
-    public static final Block EASING_TESTER = registerBlock("easing_tester", new EasingTesterBlock(FabricBlockSettings.copyOf(Blocks.STONE)));
+    public static final ThumperBlock THUMPER_BLOCK = registerBlock("thumper", new ThumperBlock(AbstractBlock.Settings.copy(Blocks.STONE)));
+    public static final Item HIGHLIGHT_STICK = registerItem("highlight_stick", new Item(new Item.Settings()));
+    public static final Block EASING_TESTER = registerBlock("easing_tester", new EasingTesterBlock(AbstractBlock.Settings.copy(Blocks.STONE)));
     public static final BlockEntityType<EasingTesterBlockEntity> EASING_TESTER_BE = Registry.register(
         Registries.BLOCK_ENTITY_TYPE,
         id("easing_tester"),
         BlockEntityType.Builder.create(EasingTesterBlockEntity::new, EASING_TESTER).build(null)
     );
-    public static final OverlayTesterItem OVERLAY_TESTER = registerItem("overlay_tester", new OverlayTesterItem(new FabricItemSettings()));
+    public static final OverlayTesterItem OVERLAY_TESTER = registerItem("overlay_tester", new OverlayTesterItem(new Item.Settings()));
 
     public static final ValueCalculator TEST_VALUE_CALCULATOR = ValueCalculator.of(id("test_0"), "stick");
 
-    public static final Item VALUE_CALCULATOR_TESTER = registerItem("value_calculator_tester", new Item(new FabricItemSettings()) {
+    public static final Item VALUE_CALCULATOR_TESTER = registerItem("value_calculator_tester", new Item(new Item.Settings()) {
         @Override
         public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
 
@@ -82,9 +83,16 @@ public class TestMod implements ModInitializer {
                     var time = (System.nanoTime() - start) / 1_000_000f;
 
                     var stack = user.getStackInHand(hand);
-                    //noinspection DataFlowIssue
-                    stack.getOrCreateNbt().putInt("avg_count", stack.getNbt().getInt("avg_count") + 1);
-                    stack.getNbt().putDouble("avg_sum", stack.getNbt().getDouble("avg_sum") + time);
+                    var nbtC = stack.getComponents().get(CUSTOM_DATA);
+                    var nbt = new NbtCompound();
+                    if (nbtC != null) {
+                        nbt = nbtC.copyNbt();
+                    }
+
+                    nbt.putInt("avg_count", nbt.getInt("avg_count") + 1);
+                    nbt.putDouble("avg_sum", nbt.getDouble("avg_sum") + time);
+
+                    stack.set(CUSTOM_DATA, NbtComponent.of(nbt));
 
                     user.sendMessage(Text.literal("Value (server): " + result + " (" + time + "ms)"), true);
                 }
@@ -94,11 +102,12 @@ public class TestMod implements ModInitializer {
         }
 
         @Override
-        public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-            super.appendTooltip(stack, world, tooltip, context);
+        public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+            super.appendTooltip(stack, context, tooltip, type);
 
-            if (stack.hasNbt()) {
-                var time = stack.getNbt().getDouble("avg_sum") / stack.getNbt().getInt("avg_count");
+            if (stack.contains(CUSTOM_DATA)) {
+                var nbt = stack.get(CUSTOM_DATA);
+                var time = nbt.copyNbt().getDouble("avg_sum") / nbt.copyNbt().getInt("avg_count");
                 tooltip.add(Text.literal("Average time: " + time + "ms."));
             }
         }
@@ -160,19 +169,19 @@ public class TestMod implements ModInitializer {
                 .addLine(Text.literal("This is a line that is supposed to be very long to exceed the imposed line " +
                     "width limit. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor " +
                     "incididunt ut labore et dolore magna aliqua."))
-                .hideSections(ItemStack.TooltipSection.ENCHANTMENTS)
+//                .hideSections(ItemStack.TooltipSection.ENCHANTMENTS) // disabled
                 .defaultStyle(Style.EMPTY.withFormatting(Formatting.GRAY))
                 .maxLineWidth(48);
         }, Items.STICK, Items.BONE, Items.WOODEN_SWORD);
     }
 
     public static Identifier id(String path) {
-        return new Identifier(ID, path);
+        return Identifier.of(ID, path);
     }
 
     private static <B extends Block> B registerBlock(String name, B block) {
         var registeredBlock = Registry.register(Registries.BLOCK, id(name), block);
-        Registry.register(Registries.ITEM, id(name), new BlockItem(registeredBlock, new FabricItemSettings()));
+        Registry.register(Registries.ITEM, id(name), new BlockItem(registeredBlock, new Item.Settings()));
         return registeredBlock;
     }
 

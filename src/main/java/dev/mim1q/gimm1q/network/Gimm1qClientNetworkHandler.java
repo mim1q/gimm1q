@@ -1,5 +1,6 @@
 package dev.mim1q.gimm1q.network;
 
+import dev.mim1q.gimm1q.network.s2c.CameraShakeS2CPacket;
 import dev.mim1q.gimm1q.network.s2c.ValueCalculatorSyncS2CPacket;
 import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.screenshake.ScreenShakeAccessor;
@@ -14,23 +15,18 @@ import org.jetbrains.annotations.ApiStatus;
 @Environment(EnvType.CLIENT)
 public class Gimm1qClientNetworkHandler {
     public static void init() {
-        ClientPlayNetworking.registerGlobalReceiver(Gimm1qPacketIds.CAMERA_SHAKE_S2C, (client, handler, buf, responseSender) -> {
-            float shakeIntensity = buf.readFloat();
-            int shakeDuration = buf.readInt();
-            String modifierName = buf.readString();
-            ClientPlayerEntity player = client.player;
+        ClientPlayNetworking.registerGlobalReceiver(CameraShakeS2CPacket.ID, (msg, ctx) -> {
+            ClientPlayerEntity player = ctx.player();
             if (player == null) return;
-            if (!modifierName.isBlank()) {
-                shakeIntensity *= ScreenShakeModifiers.getModifier(modifierName);
+            var intensity = msg.intensity();
+            if (!msg.modifierName().isBlank()) {
+                intensity *= ScreenShakeModifiers.getModifier(msg.modifierName());
             }
-            ((ScreenShakeAccessor) player).shakeCamera(shakeIntensity, shakeDuration);
+            ((ScreenShakeAccessor) player).shakeCamera(intensity, msg.duration());
         });
 
-        ClientPlayNetworking.registerGlobalReceiver(Gimm1qPacketIds.SYNC_VALUE_CALCULATORS_S2C, (client, handler, buf, responseSender) -> {
-            var data = ValueCalculatorSyncS2CPacket.readMap(buf);
-            client.executeTask(() -> {
-                ValueCalculatorResourceReloader.INSTANCE.replaceWith(data);
-            });
-        });
+        ClientPlayNetworking.registerGlobalReceiver(ValueCalculatorSyncS2CPacket.ID, (msg, ctx) ->
+            ctx.client().executeTask(() -> ValueCalculatorResourceReloader.INSTANCE.replaceWith(msg.map()))
+        );
     }
 }

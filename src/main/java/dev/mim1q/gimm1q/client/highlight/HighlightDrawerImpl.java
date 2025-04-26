@@ -12,8 +12,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.ApiStatus;
-import org.joml.Matrix3f;
-import org.joml.Matrix4f;
 
 import static net.minecraft.util.math.MathHelper.sign;
 
@@ -25,7 +23,8 @@ public class HighlightDrawerImpl implements HighlightDrawer {
 
     private WorldRenderContext renderContext = null;
 
-    private HighlightDrawerImpl() {}
+    private HighlightDrawerImpl() {
+    }
 
     public static void setRenderContext(WorldRenderContext renderContext) {
         INSTANCE.renderContext = renderContext;
@@ -39,71 +38,69 @@ public class HighlightDrawerImpl implements HighlightDrawer {
         var vertexConsumers = renderContext.consumers();
         if (matrices == null || vertexConsumers == null) return;
 
-        var vertices = new float[][] {
-            new float[] { (float) box.minX, (float) box.minY, (float) box.minZ }, // 000 [0]
-            new float[] { (float) box.minX, (float) box.minY, (float) box.maxZ }, // 001 [1]
-            new float[] { (float) box.minX, (float) box.maxY, (float) box.minZ }, // 010 [2]
-            new float[] { (float) box.minX, (float) box.maxY, (float) box.maxZ }, // 011 [3]
-            new float[] { (float) box.maxX, (float) box.minY, (float) box.minZ }, // 100 [4]
-            new float[] { (float) box.maxX, (float) box.minY, (float) box.maxZ }, // 101 [5]
-            new float[] { (float) box.maxX, (float) box.maxY, (float) box.minZ }, // 110 [6]
-            new float[] { (float) box.maxX, (float) box.maxY, (float) box.maxZ }, // 111 [7]
+        var vertices = new float[][]{
+            new float[]{(float) box.minX, (float) box.minY, (float) box.minZ}, // 000 [0]
+            new float[]{(float) box.minX, (float) box.minY, (float) box.maxZ}, // 001 [1]
+            new float[]{(float) box.minX, (float) box.maxY, (float) box.minZ}, // 010 [2]
+            new float[]{(float) box.minX, (float) box.maxY, (float) box.maxZ}, // 011 [3]
+            new float[]{(float) box.maxX, (float) box.minY, (float) box.minZ}, // 100 [4]
+            new float[]{(float) box.maxX, (float) box.minY, (float) box.maxZ}, // 101 [5]
+            new float[]{(float) box.maxX, (float) box.maxY, (float) box.minZ}, // 110 [6]
+            new float[]{(float) box.maxX, (float) box.maxY, (float) box.maxZ}, // 111 [7]
         };
 
         matrices.push();
         {
             matrices.translate(-renderContext.camera().getPos().x, -renderContext.camera().getPos().y, -renderContext.camera().getPos().z);
-            drawFace(matrices, vertexConsumers, new float[][] { vertices[3], vertices[2], vertices[0], vertices[1] }, colorArgb, outlineArgb);
-            drawFace(matrices, vertexConsumers, new float[][] { vertices[6], vertices[7], vertices[5], vertices[4] }, colorArgb, outlineArgb);
-            drawFace(matrices, vertexConsumers, new float[][] { vertices[2], vertices[6], vertices[4], vertices[0] }, colorArgb, outlineArgb);
-            drawFace(matrices, vertexConsumers, new float[][] { vertices[7], vertices[3], vertices[1], vertices[5] }, colorArgb, outlineArgb);
-            drawFace(matrices, vertexConsumers, new float[][] { vertices[4], vertices[5], vertices[1], vertices[0] }, colorArgb, outlineArgb);
-            drawFace(matrices, vertexConsumers, new float[][] { vertices[3], vertices[7], vertices[6], vertices[2] }, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][]{vertices[3], vertices[2], vertices[0], vertices[1]}, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][]{vertices[6], vertices[7], vertices[5], vertices[4]}, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][]{vertices[2], vertices[6], vertices[4], vertices[0]}, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][]{vertices[7], vertices[3], vertices[1], vertices[5]}, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][]{vertices[4], vertices[5], vertices[1], vertices[0]}, colorArgb, outlineArgb);
+            drawFace(matrices, vertexConsumers, new float[][]{vertices[3], vertices[7], vertices[6], vertices[2]}, colorArgb, outlineArgb);
         }
         matrices.pop();
     }
 
-    private void drawVertex(Matrix4f posMatrix, Matrix3f normalMatrix, VertexConsumer buffer, float[] vertex, int argb, float u, float v) {
+    private void drawVertex(MatrixStack.Entry entry, VertexConsumer buffer, float[] vertex, int argb, float u, float v) {
         buffer
-            .vertex(posMatrix, vertex[0], vertex[1], vertex[2])
+            .vertex(entry, vertex[0], vertex[1], vertex[2])
             .color(argb)
             .texture(u, v)
             .overlay(OverlayTexture.DEFAULT_UV)
             .light(0x0000F0)
-            .normal(normalMatrix, 0.0F, 1.0F, 0.0F)
-            .next();
+            .normal(entry, 0.0F, 1.0F, 0.0F);
     }
 
     private void drawFace(MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, float[][] vertices, int argb, int outlineArgb) {
-        var posMatrix = matrices.peek().getPositionMatrix();
-        var normalMatrix = matrices.peek().getNormalMatrix();
+        var entry = matrices.peek();
         var buffer = vertexConsumerProvider.getBuffer(RenderLayer.getEntityTranslucent(TEXTURE));
 
         var drawOutline = (outlineArgb & 0xFF000000) != 0;
         var innerVertices = vertices;
 
         if (drawOutline) {
-            innerVertices = getInsetFace(vertices, 1/16f);
+            innerVertices = getInsetFace(vertices, 1 / 16f);
             var outlineBuffer = vertexConsumerProvider.getBuffer(RenderLayer.getEntityTranslucent(TEXTURE));
-            drawInsetFace(posMatrix, normalMatrix, outlineBuffer, vertices, innerVertices, outlineArgb);
+            drawInsetFace(entry, outlineBuffer, vertices, innerVertices, outlineArgb);
         }
 
         var drawInner = (argb & 0xFF000000) != 0;
         if (!drawInner) return;
 
-        for (var i = 0 ; i <= 3; ++i) {
+        for (var i = 0; i <= 3; ++i) {
             var u = i & 1;
             var v = (i >> 1) & 1;
-            drawVertex(posMatrix, normalMatrix, buffer, innerVertices[i], argb, u, v);
+            drawVertex(entry, buffer, innerVertices[i], argb, u, v);
         }
     }
 
-    private void drawInsetFace(Matrix4f posMatrix, Matrix3f normalMatrix, VertexConsumer buffer, float[][] vertices, float[][] insetVertices, int argb) {
-        for (var i = 0 ; i <= 3; ++i) {
-            drawVertex(posMatrix, normalMatrix, buffer, vertices[i], argb, 0, 0);
-            drawVertex(posMatrix, normalMatrix, buffer, insetVertices[i], argb, 1, 0);
-            drawVertex(posMatrix, normalMatrix, buffer, insetVertices[(i + 1) % 4], argb, 1, 1);
-            drawVertex(posMatrix, normalMatrix, buffer, vertices[(i + 1) % 4], argb, 0, 1);
+    private void drawInsetFace(MatrixStack.Entry entry, VertexConsumer buffer, float[][] vertices, float[][] insetVertices, int argb) {
+        for (var i = 0; i <= 3; ++i) {
+            drawVertex(entry, buffer, vertices[i], argb, 0, 0);
+            drawVertex(entry, buffer, insetVertices[i], argb, 1, 0);
+            drawVertex(entry, buffer, insetVertices[(i + 1) % 4], argb, 1, 1);
+            drawVertex(entry, buffer, vertices[(i + 1) % 4], argb, 0, 1);
         }
     }
 
@@ -114,26 +111,26 @@ public class HighlightDrawerImpl implements HighlightDrawer {
 
         if (dy == 0) {
             if (dz > 0) {
-                return new float[][] {
-                    new float[] { vertices[0][0] + dx * inset, vertices[0][1], vertices[0][2] + dz * inset },
-                    new float[] { vertices[1][0] + dx * inset, vertices[1][1], vertices[1][2] - dz * inset },
-                    new float[] { vertices[2][0] - dx * inset, vertices[2][1], vertices[2][2] - dz * inset },
-                    new float[] { vertices[3][0] - dx * inset, vertices[3][1], vertices[3][2] + dz * inset },
+                return new float[][]{
+                    new float[]{vertices[0][0] + dx * inset, vertices[0][1], vertices[0][2] + dz * inset},
+                    new float[]{vertices[1][0] + dx * inset, vertices[1][1], vertices[1][2] - dz * inset},
+                    new float[]{vertices[2][0] - dx * inset, vertices[2][1], vertices[2][2] - dz * inset},
+                    new float[]{vertices[3][0] - dx * inset, vertices[3][1], vertices[3][2] + dz * inset},
                 };
             }
-            return new float[][] {
-                new float[] { vertices[0][0] + dx * inset, vertices[0][1], vertices[0][2] + dz * inset },
-                new float[] { vertices[1][0] - dx * inset, vertices[1][1], vertices[1][2] + dz * inset },
-                new float[] { vertices[2][0] - dx * inset, vertices[2][1], vertices[2][2] - dz * inset },
-                new float[] { vertices[3][0] + dx * inset, vertices[3][1], vertices[3][2] - dz * inset },
+            return new float[][]{
+                new float[]{vertices[0][0] + dx * inset, vertices[0][1], vertices[0][2] + dz * inset},
+                new float[]{vertices[1][0] - dx * inset, vertices[1][1], vertices[1][2] + dz * inset},
+                new float[]{vertices[2][0] - dx * inset, vertices[2][1], vertices[2][2] - dz * inset},
+                new float[]{vertices[3][0] + dx * inset, vertices[3][1], vertices[3][2] - dz * inset},
             };
         }
 
-        return new float[][] {
-          new float[] { vertices[0][0] + dx * inset, vertices[0][1] + dy * inset, vertices[0][2] + dz * inset },
-          new float[] { vertices[1][0] - dx * inset, vertices[1][1] + dy * inset, vertices[1][2] - dz * inset },
-          new float[] { vertices[2][0] - dx * inset, vertices[2][1] - dy * inset, vertices[2][2] - dz * inset },
-          new float[] { vertices[3][0] + dx * inset, vertices[3][1] - dy * inset, vertices[3][2] + dz * inset },
+        return new float[][]{
+            new float[]{vertices[0][0] + dx * inset, vertices[0][1] + dy * inset, vertices[0][2] + dz * inset},
+            new float[]{vertices[1][0] - dx * inset, vertices[1][1] + dy * inset, vertices[1][2] - dz * inset},
+            new float[]{vertices[2][0] - dx * inset, vertices[2][1] - dy * inset, vertices[2][2] - dz * inset},
+            new float[]{vertices[3][0] + dx * inset, vertices[3][1] - dy * inset, vertices[3][2] + dz * inset},
         };
     }
 }

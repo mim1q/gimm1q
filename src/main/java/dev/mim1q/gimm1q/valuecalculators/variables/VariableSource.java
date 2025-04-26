@@ -2,6 +2,7 @@ package dev.mim1q.gimm1q.valuecalculators.variables;
 
 import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import dev.mim1q.gimm1q.registry.Gimm1qRegistries;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorContext;
 import dev.mim1q.gimm1q.valuecalculators.parameters.ValueCalculatorParameter;
@@ -23,7 +24,7 @@ public interface VariableSource {
      * Internal codec used for serializing and deserializing {@link VariableSource}s with provided {@code type}s
      */
     Codec<VariableSource> TYPED_CODEC = Gimm1qRegistries.VARIABLE_SOURCE_TYPE.getCodec()
-        .dispatch("type", VariableSource::getType, VariableSourceType::codec);
+        .dispatch("type", VariableSource::getType, it -> MapCodec.assumeMapUnsafe(it.codec()));
 
     /**
      * Internal codec used for serializing and deserializing a {@link VariableSourceTypes.Constant} based on a

@@ -75,7 +75,7 @@ public interface HighlightDrawer {
      * @see #drawHighlight(Box, int, int)
      */
     default void highlightEntity(Entity entity, int colorArgb, int outlineArgb) {
-        var tickDelta = MinecraftClient.getInstance().getTickDelta();
+        var tickDelta = MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(false);
         var pos = entity.getLerpedPos(tickDelta);
         var prevPos = entity.getPos();
         var offset = pos.subtract(prevPos);

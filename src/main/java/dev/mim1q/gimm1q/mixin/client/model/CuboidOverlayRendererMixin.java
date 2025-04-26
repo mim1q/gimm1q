@@ -91,12 +91,7 @@ public class CuboidOverlayRendererMixin {
         cancellable = true
     )
     private void gimm1q$render(
-        MatrixStack.Entry entry,
-        VertexConsumer vertexConsumer,
-        int light,
-        int overlay,
-        float red, float green, float blue, float alpha,
-        CallbackInfo ci
+        MatrixStack.Entry entry, VertexConsumer vertexConsumer, int light, int overlay, int color, CallbackInfo ci
     ) {
         if (vertexConsumer instanceof ModelOverlayVertexConsumer modelOverlayVertexConsumer) {
             if (gimm1q$isPlane && modelOverlayVertexConsumer.shouldSkipPlanes()) {
@@ -108,7 +103,7 @@ public class CuboidOverlayRendererMixin {
             final var normalMatrix = entry.getNormalMatrix();
 
             final var normalMultiplier = modelOverlayVertexConsumer.isInverted() ? -1.0f : 1.0f;
-            final var animationProgress = MinecraftClient.getInstance().inGameHud.getTicks() + MinecraftClient.getInstance().getTickDelta();
+            final var animationProgress = MinecraftClient.getInstance().inGameHud.getTicks() + MinecraftClient.getInstance().getRenderTickCounter().getTickDelta(false);
 
             for (final var quad : this.sides) {
                 final var quadDir = gimm1q$isMirrored ? quad.direction.mul(-1f, 1f, 1f, new Vector3f()) : quad.direction;
@@ -138,8 +133,7 @@ public class CuboidOverlayRendererMixin {
                     final var index = modelOverlayVertexConsumer.isInverted() ? 3 - i : i;
                     final var vertex = quad.vertices[index];
 
-                    @SuppressWarnings("DataFlowIssue")
-                    final var vertexOffsets = offset[index];
+                    @SuppressWarnings("DataFlowIssue") final var vertexOffsets = offset[index];
 
                     final var x = (vertex.pos.x() + vertexOffsets[0] * xOffsetScalar) / 16.0f;
                     final var y = (vertex.pos.y() + vertexOffsets[1] * yOffsetScalar) / 16.0f;
@@ -158,7 +152,7 @@ public class CuboidOverlayRendererMixin {
 
                     vertexConsumer.vertex(
                         posVector.x(), posVector.y(), posVector.z(),
-                        red, green, blue, alpha,
+                        color,
                         uv[0], uv[1],
                         overlay,
                         light,

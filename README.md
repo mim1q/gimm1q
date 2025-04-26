@@ -147,9 +147,9 @@ public void onInitializeClient() {
         // The item to register
         SOME_ITEM,                                    
         // The GUI model identifier (without the `item/` prefix!)
-        new Identifier("modid", "gui/some_item"),     
+        Identifier.of("modid", "gui/some_item"),     
         // The handheld model identifier (as above)
-        new Identifier("modid", "handheld/some_item") 
+        Identifier.of("modid", "handheld/some_item") 
     );
 }
 ```

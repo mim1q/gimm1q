@@ -1,22 +1,28 @@
 package dev.mim1q.gimm1q.network.s2c;
 
-import dev.mim1q.gimm1q.network.Gimm1qPacketIds;
-import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
+import dev.mim1q.gimm1q.Gimm1q;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.PacketCodecs;
+import net.minecraft.network.packet.CustomPayload;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
-public class CameraShakeS2CPacket extends PacketByteBuf {
-    public CameraShakeS2CPacket(float intensity, int duration, String modifierName) {
-        super(Unpooled.buffer());
-        writeFloat(intensity);
-        writeInt(duration);
-        writeString(modifierName);
-    }
+public record CameraShakeS2CPacket(
+    float intensity,
+    int duration,
+    String modifierName
+) implements CustomPayload {
+    public static final Id<CameraShakeS2CPacket> ID = new Id<>(Gimm1q.id("camera_shake"));
+    public static final PacketCodec<RegistryByteBuf, CameraShakeS2CPacket> CODEC = PacketCodec.tuple(
+        PacketCodecs.FLOAT, CameraShakeS2CPacket::intensity,
+        PacketCodecs.INTEGER, CameraShakeS2CPacket::duration,
+        PacketCodecs.STRING, CameraShakeS2CPacket::modifierName,
+        CameraShakeS2CPacket::new
+    );
 
-    public void send(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, Gimm1qPacketIds.CAMERA_SHAKE_S2C, this);
+    @Override
+    public Id<? extends CustomPayload> getId() {
+        return ID;
     }
 }

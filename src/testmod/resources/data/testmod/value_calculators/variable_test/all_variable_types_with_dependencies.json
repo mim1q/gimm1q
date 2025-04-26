@@ -4,7 +4,7 @@
         "attribute": {
             "type": "gimm1q:attribute",
             "attribute": "generic.movement_speed",
-            "fallback": "constant"
+            "fallback": 0.0
         },
         "enchantment": {
             "type": "gimm1q:enchantment",

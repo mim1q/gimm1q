@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(FeatureRenderer.class)
 public abstract class FeatureRendererMixin {
     @Inject(
-        method = "renderModel(Lnet/minecraft/client/render/entity/model/EntityModel;Lnet/minecraft/util/Identifier;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFF)V",
+        method = "renderModel",
         at = @At("RETURN")
     )
     private static <T extends LivingEntity> void gimm1q$renderModelOverlay(
@@ -28,15 +28,13 @@ public abstract class FeatureRendererMixin {
         VertexConsumerProvider vertexConsumers,
         int light,
         T entity,
-        float red,
-        float green,
-        float blue,
+        int i,
         CallbackInfo ci
     ) {
         if (model == null) return;
         final var consumer = ((EntityModelVertexConsumerOverrideAccessor) model).gimm1q$getConsumerOverride(vertexConsumers);
         if (consumer == null) return;
 
-        model.render(matrices, consumer, light, OverlayTexture.DEFAULT_UV, 1f, 1f, 1f, 1f);
+        model.render(matrices, consumer, light, OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
     }
 }

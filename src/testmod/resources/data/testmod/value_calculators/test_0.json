@@ -19,12 +19,12 @@
         "b": "a + 10",
         "current_health": {
             "type": "gimm1q:entity_nbt",
-            "entity": "holder",
+            "entity": "this",
             "path": "Health"
         },
         "max_health": {
             "type": "gimm1q:attribute",
-            "entity": "holder",
+            "entity": "this",
             "attribute": "generic.max_health"
         },
         "health_percentage": "current_health / max_health"

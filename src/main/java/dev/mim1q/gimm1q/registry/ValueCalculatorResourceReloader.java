@@ -71,9 +71,8 @@ public class ValueCalculatorResourceReloader implements SimpleSynchronousResourc
                             var json = JsonParser.parseReader(new InputStreamReader(input.get()));
                             var internal = ValueCalculatorInternal.CODEC
                                 .parse(JsonOps.INSTANCE, json)
-                                .getOrThrow(false, e -> {
-                                    Gimm1q.LOGGER.error("Failed to parse value calculator: {}, {}", newId, e);
-                                    throw new RuntimeException(e);
+                                .getOrThrow((s) -> {
+                                    throw new RuntimeException(String.format("Failed to parse value calculator: %s, %s", newId, s));
                                 });
 
                             map.computeIfAbsent(newId, k -> new ArrayList<>()).add(internal);
