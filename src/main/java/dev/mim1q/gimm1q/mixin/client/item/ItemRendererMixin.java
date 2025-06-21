@@ -36,6 +36,7 @@ public abstract class ItemRendererMixin {
         var model = HandheldItemModelRegistryImpl.MODELS.get(stack.getItem());
         if (model != null) {
             var bakedModel = getModels().getModelManager().getModel(model.getLeft());
+            if (bakedModel == null) return;
             var override = bakedModel.getOverrides().apply(bakedModel, stack, (ClientWorld) world, entity, seed);
             cir.setReturnValue(override);
         }
@@ -68,6 +69,7 @@ public abstract class ItemRendererMixin {
             var model = HandheldItemModelRegistryImpl.MODELS.get(item.getItem());
             if (model != null) {
                 var bakedModel = getModels().getModelManager().getModel(model.getRight());
+                if (bakedModel == null) return;
                 var override = bakedModel.getOverrides().apply(bakedModel, item, (ClientWorld) world, entity, seed);
 
                 this.renderItem(item, renderMode, leftHanded, matrices, vertexConsumers, light, overlay, override);

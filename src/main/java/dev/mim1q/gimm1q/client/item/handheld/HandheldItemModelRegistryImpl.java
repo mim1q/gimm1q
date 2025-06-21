@@ -3,7 +3,6 @@ package dev.mim1q.gimm1q.client.item.handheld;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.model.loading.v1.ModelLoadingPlugin;
-import net.minecraft.client.util.ModelIdentifier;
 import net.minecraft.item.Item;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
@@ -16,16 +15,16 @@ import java.util.Map;
 @Environment(EnvType.CLIENT)
 public final class HandheldItemModelRegistryImpl implements HandheldItemModelRegistry {
     public static final HandheldItemModelRegistry INSTANCE = new HandheldItemModelRegistryImpl();
-    public static final Map<Item, Pair<ModelIdentifier, ModelIdentifier>> MODELS = new HashMap<>();
+    public static final Map<Item, Pair<Identifier, Identifier>> MODELS = new HashMap<>();
 
     @Override
     public void register(Item item, Identifier modelId, Identifier handheldId) {
-        var id = new ModelIdentifier(modelId, "inventory");
-        var handheld = new ModelIdentifier(handheldId, "inventory");
+        var prefixedModelId = modelId.withPrefixedPath("item/");
+        var prefixedHandheldId = handheldId.withPrefixedPath("item/");
         ModelLoadingPlugin.register(context -> context.addModels(
-            handheldId.withPrefixedPath("item/"),
-            modelId.withPrefixedPath("item/")
+            prefixedModelId,
+            prefixedHandheldId
         ));
-        MODELS.put(item, new Pair<>(id, handheld));
+        MODELS.put(item, new Pair<>(prefixedModelId, prefixedHandheldId));
     }
 }
