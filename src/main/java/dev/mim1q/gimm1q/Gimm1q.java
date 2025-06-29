@@ -1,5 +1,6 @@
 package dev.mim1q.gimm1q;
 
+import dev.mim1q.gimm1q.registry.Gimm1qParticles;
 import dev.mim1q.gimm1q.network.Gimm1qPacketIds;
 import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;
@@ -53,6 +54,9 @@ public class Gimm1q implements ModInitializer {
 
         // Custom commands
         Gimm1qCommands.init();
+
+        // Custom particles
+        Gimm1qParticles.init();
     }
 
     public static Identifier id(String path) {

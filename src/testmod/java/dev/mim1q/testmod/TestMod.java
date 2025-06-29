@@ -11,6 +11,7 @@ import dev.mim1q.testmod.block.EasingTesterBlock;
 import dev.mim1q.testmod.block.EasingTesterBlockEntity;
 import dev.mim1q.testmod.block.ThumperBlock;
 import dev.mim1q.testmod.item.OverlayTesterItem;
+import dev.mim1q.testmod.item.ParticleTesterItem;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
@@ -57,6 +58,8 @@ public class TestMod implements ModInitializer {
     public static final OverlayTesterItem OVERLAY_TESTER = registerItem("overlay_tester", new OverlayTesterItem(new FabricItemSettings()));
 
     public static final ValueCalculator TEST_VALUE_CALCULATOR = ValueCalculator.of(id("test_0"), "stick");
+
+    public static final Item PARTICLE_TESTER = registerItem("particle_tester", new ParticleTesterItem(new FabricItemSettings()));
 
     public static final Item VALUE_CALCULATOR_TESTER = registerItem("value_calculator_tester", new Item(new FabricItemSettings()) {
         @Override
@@ -149,6 +152,7 @@ public class TestMod implements ModInitializer {
                 items.add(THUMPER_BLOCK);
                 items.add(EASING_TESTER);
                 items.add(VALUE_CALCULATOR_TESTER);
+                items.add(PARTICLE_TESTER);
             }
         });
 

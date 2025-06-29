@@ -7,6 +7,7 @@ import dev.mim1q.gimm1q.client.highlight.crosshair.CrosshairTipDrawerCallback;
 import dev.mim1q.gimm1q.client.highlight.crosshair.CrosshairTipDrawerCallback.CrosshairTipDrawerContext;
 import dev.mim1q.gimm1q.client.highlight.crosshair.CrosshairTipDrawerImpl;
 import dev.mim1q.gimm1q.network.Gimm1qClientNetworkHandler;
+import dev.mim1q.gimm1q.registry.Gimm1qParticles;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -19,6 +20,7 @@ public class Gimm1qClient implements ClientModInitializer {
     public void onInitializeClient() {
         Gimm1qClientNetworkHandler.init();
         Gimm1qClientCommands.init();
+        Gimm1qParticles.initClient();
 
         WorldRenderEvents.AFTER_ENTITIES.register((context) -> {
             var player = MinecraftClient.getInstance().player;
