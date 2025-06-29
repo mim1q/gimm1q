@@ -1,6 +1,7 @@
 package dev.mim1q.gimm1q;
 
 import dev.mim1q.gimm1q.network.Gimm1qServerNetworkHandler;
+import dev.mim1q.gimm1q.registry.Gimm1qParticles;
 import dev.mim1q.gimm1q.registry.ValueCalculatorResourceReloader;
 import dev.mim1q.gimm1q.valuecalculators.variables.VariableSourceTypes;
 import net.fabricmc.api.EnvType;
@@ -21,7 +22,7 @@ public class Gimm1q implements ModInitializer {
     public static final String ID = "gimm1q";
     public static final Logger LOGGER = LogManager.getLogger(ID);
 
-    /**
+    /**[]
      * Only use for the testmod. Don't enable in production because there's lots of debug messages
      */
     @ApiStatus.Internal
@@ -54,6 +55,9 @@ public class Gimm1q implements ModInitializer {
 
         // Networking
         Gimm1qServerNetworkHandler.init();
+
+        // Custom particles
+        Gimm1qParticles.init();
     }
 
     public static Identifier id(String path) {
